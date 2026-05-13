@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}ЄвроВайб · Foundation{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <p class="eyebrow">Vienna 2026 · friend scoreboard</p>
+    <h1>ЄвроВайб</h1>
+    <p class="lede">
+      SSR-фундамент застосунку готовий до наступних етапів: акаунти, групи,
+      голосування і рейтинги.
+    </p>
+  </section>
+
+  <section class="foundation-grid" aria-label="Foundation status">
+    <article class="status-card">
+      <span class="status-kicker">Layout</span>
+      <h2>Responsive shell</h2>
+      <p>Базовий темний layout із top nav placeholder та контейнером сторінки.</p>
+    </article>
+    <article class="status-card">
+      <span class="status-kicker">Static</span>
+      <h2>Design tokens</h2>
+      <p>CSS-токени винесені в static-файли для подальшого розвитку дизайн-системи.</p>
+    </article>
+    <article class="status-card">
+      <span class="status-kicker">Ops</span>
+      <h2>Render-ready</h2>
+      <p>Є health check, env-based settings, static collection і deploy skeleton.</p>
+    </article>
+  </section>
+{% endblock %}
