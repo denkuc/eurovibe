@@ -83,6 +83,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "accounts",
+    "contest",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

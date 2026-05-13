@@ -199,6 +199,11 @@
     width: min(100%, 48rem);
   }
 
+  .panel-wide {
+    width: min(100%, 56rem);
+    margin-bottom: 1rem;
+  }
+
   .auth-card h1,
   .panel h1 {
     margin: 0.5rem 0 1rem;
@@ -266,6 +271,76 @@
     color: var(--color-gold);
   }
 
+  .state-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.7rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text);
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .state-pill-gold {
+    color: #161006;
+    border-color: rgba(255, 216, 107, 0.7);
+    background: var(--color-gold);
+  }
+
+  .finalist-list {
+    display: grid;
+    gap: 0.65rem;
+    width: min(100%, 56rem);
+  }
+
+  .finalist-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.9rem;
+    min-height: 4.5rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .finalist-row-ukraine {
+    border-color: rgba(255, 216, 107, 0.72);
+    background: linear-gradient(135deg, rgba(255, 216, 107, 0.18), rgba(255, 255, 255, 0.06));
+  }
+
+  .running-order {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    color: var(--color-cyan);
+    font-weight: 800;
+    background: rgba(66, 232, 255, 0.1);
+  }
+
+  .finalist-row h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .finalist-row h2 span {
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .finalist-row p {
+    margin: 0.15rem 0 0;
+    color: var(--color-muted);
+  }
+
   @media (max-width: 720px) {
     .topbar {
       align-items: flex-start;
@@ -279,6 +354,15 @@
 
     .foundation-grid {
       grid-template-columns: 1fr;
+    }
+
+    .finalist-row {
+      grid-template-columns: 2.6rem minmax(0, 1fr);
+    }
+
+    .finalist-row .state-pill {
+      grid-column: 2;
+      justify-self: start;
     }
   }
 }

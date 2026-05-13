@@ -1,0 +1,30 @@
+DEV_SEED_YEAR = 2026
+
+DEV_FINALISTS = [
+    {"running_order": 1, "country_name": "Algeria", "country_code": "DZ", "artist_name": "Sahara Bloom", "song_title": "Silver Dune"},
+    {"running_order": 2, "country_name": "Angola", "country_code": "AO", "artist_name": "Luar N'gola", "song_title": "Night Pulse"},
+    {"running_order": 3, "country_name": "Benin", "country_code": "BJ", "artist_name": "Ayo Soleil", "song_title": "Golden Echo"},
+    {"running_order": 4, "country_name": "Botswana", "country_code": "BW", "artist_name": "Kalahari FM", "song_title": "Heat Mirage"},
+    {"running_order": 5, "country_name": "Cameroon", "country_code": "CM", "artist_name": "Noir Atlas", "song_title": "River Neon"},
+    {"running_order": 6, "country_name": "Cote d'Ivoire", "country_code": "CI", "artist_name": "Velours Abidjan", "song_title": "Rouge Minuit"},
+    {"running_order": 7, "country_name": "DR Congo", "country_code": "CD", "artist_name": "Kin Pulse", "song_title": "Electric Rain"},
+    {"running_order": 8, "country_name": "Egypt", "country_code": "EG", "artist_name": "Nile Avenue", "song_title": "Glass Moon"},
+    {"running_order": 9, "country_name": "Ethiopia", "country_code": "ET", "artist_name": "Addis Nova", "song_title": "Blue Flame"},
+    {"running_order": 10, "country_name": "Gabon", "country_code": "GA", "artist_name": "Libreville Lights", "song_title": "Velvet Storm"},
+    {"running_order": 11, "country_name": "Ghana", "country_code": "GH", "artist_name": "Gold Coast Club", "song_title": "Higher Tide"},
+    {"running_order": 12, "country_name": "Kenya", "country_code": "KE", "artist_name": "Savanna Theory", "song_title": "Run to Dawn"},
+    {"running_order": 13, "country_name": "Madagascar", "country_code": "MG", "artist_name": "Baobab Hearts", "song_title": "Wild Orbit"},
+    {"running_order": 14, "country_name": "Morocco", "country_code": "MA", "artist_name": "Atlas After Dark", "song_title": "Pink Horizon"},
+    {"running_order": 15, "country_name": "Mozambique", "country_code": "MZ", "artist_name": "Maputo Metro", "song_title": "Ocean Static"},
+    {"running_order": 16, "country_name": "Namibia", "country_code": "NA", "artist_name": "Desert Signal", "song_title": "Silent Thunder"},
+    {"running_order": 17, "country_name": "Nigeria", "country_code": "NG", "artist_name": "Lagos Motion", "song_title": "Fireline"},
+    {"running_order": 18, "country_name": "Rwanda", "country_code": "RW", "artist_name": "Kigali Glow", "song_title": "City in Bloom"},
+    {"running_order": 19, "country_name": "Senegal", "country_code": "SN", "artist_name": "Dakar Nights", "song_title": "Magnetic Sand"},
+    {"running_order": 20, "country_name": "South Africa", "country_code": "ZA", "artist_name": "Cape Velvet", "song_title": "Afterlight"},
+    {"running_order": 21, "country_name": "Tanzania", "country_code": "TZ", "artist_name": "Zanzibar Wave", "song_title": "Moon Harbour"},
+    {"running_order": 22, "country_name": "Tunisia", "country_code": "TN", "artist_name": "Carthage Youth", "song_title": "Nova Medina"},
+    {"running_order": 23, "country_name": "Uganda", "country_code": "UG", "artist_name": "Equator Sound", "song_title": "Paper Skies"},
+    {"running_order": 24, "country_name": "Zambia", "country_code": "ZM", "artist_name": "Lusaka Stereo", "song_title": "Bright Voltage"},
+    {"running_order": 25, "country_name": "Ukraine", "country_code": "UA", "artist_name": "Northern Heart", "song_title": "Ridne Svitlo", "is_ukraine": True},
+]
+

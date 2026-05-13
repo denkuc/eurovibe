@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Фіналісти · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel panel-wide">
+    <p class="eyebrow">Contest state</p>
+    <h1>Фіналісти</h1>
+    {% if edition %}
+      <p>
+        Edition {{ edition.year }} · state <span class="state-pill">{{ edition.get_state_display }}</span>
+      </p>
+    {% else %}
+      <p>Seed ще не запущено. Виконай management command, щоб створити edition і список фіналістів.</p>
+    {% endif %}
+  </section>
+
+  {% if entries %}
+    <section class="finalist-list" aria-label="Список фіналістів">
+      {% for entry in entries %}
+        <article class="finalist-row{% if entry.is_ukraine %} finalist-row-ukraine{% endif %}">
+          <div class="running-order">{{ entry.running_order }}</div>
+          <div>
+            <h2>{{ entry.country_name }} <span>{{ entry.country_code }}</span></h2>
+            <p>{{ entry.artist_name }} · {{ entry.song_title }}</p>
+          </div>
+          {% if entry.is_ukraine %}
+            <span class="state-pill state-pill-gold">Україна</span>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </section>
+  {% endif %}
+{% endblock %}
+

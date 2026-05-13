@@ -202,6 +202,13 @@ ContestEntry:
 - Голосування неможливо відкрити без фіналістів.
 - Після переходу з `setup` фіналісти не редагуються через процесні сторінки.
 
+### Хід виконання
+
+- 2026-05-13: Додано app `contest` із моделями `ContestEdition` і `ContestEntry`, state constants/helper-и, унікальні constraints для року, running order і єдиної України в edition.
+- 2026-05-13: Додано доменні transition methods `open_voting()`/`close_voting()`; `open_voting()` відхиляє відкриття без фіналістів, а entries валідатор блокує редагування після `setup`.
+- 2026-05-13: Додано idempotent management command `seed_dev_contest`, який створює edition 2026 і 25 dev finalist entries із PRD.
+- 2026-05-13: Додано read-only сторінку `/contest/finalists/` і покриття тестами для seed, constraints, state helper-ів і сторінки списку.
+
 ## 6. Етап 5: Групи друзів
 
 ### Моделі
