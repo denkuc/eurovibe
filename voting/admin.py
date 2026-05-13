@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ballot, BallotItem
+from .models import Ballot, BallotItem, UserScore
 
 
 class BallotItemInline(admin.TabularInline):
@@ -23,3 +23,10 @@ class BallotItemAdmin(admin.ModelAdmin):
     list_display = ["ballot", "points", "contest_entry"]
     list_filter = ["points", "ballot__edition", "ballot__mode"]
     search_fields = ["ballot__user__username", "contest_entry__country_name"]
+
+
+@admin.register(UserScore)
+class UserScoreAdmin(admin.ModelAdmin):
+    list_display = ["user", "edition", "mode", "total_score", "exact_hits", "top10_hits_wrong_place", "calculated_at"]
+    list_filter = ["edition", "mode"]
+    search_fields = ["user__username"]

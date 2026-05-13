@@ -116,3 +116,28 @@ class ContestEntry(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 
+
+class OfficialResult(models.Model):
+    edition = models.ForeignKey(ContestEdition, related_name="official_results", on_delete=models.CASCADE)
+    final_rank = models.PositiveSmallIntegerField()
+    contest_entry = models.ForeignKey(ContestEntry, related_name="official_results", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["final_rank"]
+        constraints = [
+            models.UniqueConstraint(fields=["edition", "final_rank"], name="unique_official_rank_per_edition"),
+            models.UniqueConstraint(fields=["edition", "contest_entry"], name="unique_official_entry_per_edition"),
+        ]
+
+    def __str__(self):
+        return f"{self.edition.year} #{self.final_rank} {self.contest_entry.country_name}"
+
+    def clean(self):
+        super().clean()
+        if self.edition_id and self.contest_entry_id and self.contest_entry.edition_id != self.edition_id:
+            raise ValidationError({"contest_entry": "Entry must belong to the result edition."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

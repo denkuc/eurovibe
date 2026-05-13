@@ -91,7 +91,7 @@ class AccountsTests(TestCase):
         self.assertTrue(is_superadmin(denkuc))
         self.assertTrue(is_superadmin(staff))
 
-    def test_superadmin_placeholder_requires_superadmin_role(self):
+    def test_superadmin_legacy_route_requires_superadmin_role(self):
         regular = get_user_model().objects.create_user(username="regular", password="very-long-passphrase")
         self.client.force_login(regular)
         response = self.client.get(reverse("accounts:superadmin_dashboard"))
@@ -100,5 +100,4 @@ class AccountsTests(TestCase):
         denkuc = get_user_model().objects.create_user(username="denkuc", password="very-long-passphrase")
         self.client.force_login(denkuc)
         response = self.client.get(reverse("accounts:superadmin_dashboard"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Superadmin placeholder")
+        self.assertRedirects(response, reverse("admin_panel:dashboard"))

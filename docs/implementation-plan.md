@@ -471,6 +471,13 @@ official_results_entered -> scores_published
 - Неможливо опублікувати scores без обчислених `UserScore`.
 - Кожна admin action пишеться в audit log.
 
+### Хід виконання
+
+- 2026-05-13: Додано app `admin_panel` і кастомний `/superadmin/` dashboard; legacy `/accounts/superadmin/` редіректить на новий backoffice.
+- 2026-05-13: Реалізовано створення/відкриття поточного edition, CSV textarea імпорт фіналістів, open/close voting transitions і блокування дій не в дозволених state.
+- 2026-05-13: Додано `OfficialResult`, повний CSV official order із preview/validation, збереження official results тільки після `voting_closed`, idempotent `UserScore` scoring і publish scores transition.
+- 2026-05-13: Додано `AdminAuditLog` для процесних admin actions, Django admin registration, міграції та тести доступу/state/scoring/audit.
+
 ## 11. Етап 10: Офіційні результати і scoring користувачів
 
 ### Моделі

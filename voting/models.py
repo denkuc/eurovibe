@@ -78,3 +78,22 @@ class BallotItem(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class UserScore(models.Model):
+    edition = models.ForeignKey(ContestEdition, related_name="user_scores", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="user_scores", on_delete=models.CASCADE)
+    mode = models.CharField(max_length=32, choices=Ballot.MODE_CHOICES)
+    exact_hits = models.PositiveSmallIntegerField(default=0)
+    top10_hits_wrong_place = models.PositiveSmallIntegerField(default=0)
+    total_score = models.PositiveSmallIntegerField(default=0)
+    calculated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-total_score", "-exact_hits", "-top10_hits_wrong_place", "user__username"]
+        constraints = [
+            models.UniqueConstraint(fields=["edition", "user", "mode"], name="unique_user_score_per_mode"),
+        ]
+
+    def __str__(self):
+        return f"{self.user} {self.edition.year} {self.mode}: {self.total_score}"

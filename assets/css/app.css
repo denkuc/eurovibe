@@ -237,7 +237,8 @@
   }
 
   .form-field input:not([type="checkbox"]),
-  .form-field select {
+  .form-field select,
+  .form-field textarea {
     width: 100%;
     min-height: 2.8rem;
     padding: 0.65rem 0.75rem;
@@ -253,8 +254,17 @@
     accent-color: var(--color-cyan);
   }
 
+  .form-field textarea {
+    min-height: 11rem;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
   .form-field input:focus-visible,
-  .form-field select:focus-visible {
+  .form-field select:focus-visible,
+  .form-field textarea:focus-visible {
     border-color: var(--color-cyan);
     outline: 2px solid rgba(66, 232, 255, 0.26);
     outline-offset: 2px;
@@ -694,6 +704,66 @@
     opacity: 0.48;
   }
 
+  .button-primary:disabled,
+  .button-secondary:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+    opacity: 0.48;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 1rem;
+  }
+
+  .admin-hero,
+  .admin-list-panel {
+    margin-bottom: 1rem;
+  }
+
+  .admin-panel h2,
+  .admin-list-panel h2 {
+    margin: 0.4rem 0 0.7rem;
+    font-size: 1.35rem;
+  }
+
+  .admin-entry-list,
+  .audit-list {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 1rem;
+  }
+
+  .admin-entry-row,
+  .audit-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(8rem, 0.75fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.4rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .audit-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-entry-row:last-child,
+  .audit-row:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-entry-row span,
+  .audit-row span {
+    min-width: 0;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
   .readonly-ballot {
     width: min(100%, 56rem);
   }
@@ -751,7 +821,8 @@
     }
 
     .group-grid,
-    .detail-grid {
+    .detail-grid,
+    .admin-grid {
       grid-template-columns: 1fr;
     }
 
@@ -802,6 +873,16 @@
 
     .noscript-grid {
       grid-template-columns: 1fr;
+    }
+
+    .admin-entry-row,
+    .audit-row {
+      grid-template-columns: 2.6rem minmax(0, 1fr);
+    }
+
+    .admin-entry-row span:last-child,
+    .audit-row span {
+      grid-column: 2;
     }
   }
 }

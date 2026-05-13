@@ -88,4 +88,4 @@ def dashboard(request):
 def superadmin_dashboard(request):
     if not is_superadmin(request.user):
         return HttpResponseForbidden("Forbidden")
-    return render(request, "accounts/superadmin_dashboard.html")
+    return redirect("admin_panel:dashboard")

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load contest_extras %}
+
+{% block title %}Superadmin · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel panel-wide admin-hero">
+    <p class="eyebrow">Superadmin</p>
+    <h1>Backoffice</h1>
+    {% if edition %}
+      <p>Edition {{ edition.year }} · <span class="state-pill">{{ edition.get_state_display }}</span> · фіналістів {{ entries|length }} · бюлетенів {{ ballot_count }} · score {{ score_count }}</p>
+    {% else %}
+      <p>Поточний edition ще не створено. Почни з creation або seed CSV.</p>
+    {% endif %}
+  </section>
+
+  <div class="admin-grid">
+    <section class="panel admin-panel">
+      <p class="eyebrow">Edition</p>
+      <h2>Поточний конкурс</h2>
+      <form class="stacked-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_edition">
+        <label class="form-field">
+          <span>{{ edition_form.year.label }}</span>
+          {{ edition_form.year }}
+        </label>
+        <button class="button-secondary" type="submit">Створити або відкрити edition</button>
+      </form>
+      <div class="action-row">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="open_voting">
+          <button class="button-primary" type="submit" {% if not edition or edition.state != "setup" or not entries %}disabled{% endif %}>Відкрити голосування</button>
+        </form>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="close_voting">
+          <button class="button-secondary" type="submit" {% if not edition or edition.state != "voting_open" %}disabled{% endif %}>Закрити голосування</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel admin-panel">
+      <p class="eyebrow">Finalists</p>
+      <h2>Імпорт фіналістів</h2>
+      <p>CSV header: running_order,country_code,country_name,artist_name,song_title,is_ukraine</p>
+      <form class="stacked-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="import_finalists">
+        <label class="form-field">
+          <span>{{ finalist_form.finalists_csv.label }}</span>
+          {{ finalist_form.finalists_csv }}
+        </label>
+        <button class="button-primary" type="submit" {% if not edition or edition.state != "setup" %}disabled{% endif %}>Замінити список фіналістів</button>
+      </form>
+    </section>
+  </div>
+
+  {% if edition %}
+    <section class="panel panel-wide admin-list-panel">
+      <p class="eyebrow">Entries</p>
+      <h2>Фіналісти</h2>
+      <div class="admin-entry-list">
+        {% for entry in entries %}
+          <div class="admin-entry-row">
+            <span class="running-order">{{ entry.running_order }}</span>
+            <strong><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }}</strong>
+            <span>{{ entry.artist_name }} · {{ entry.song_title }}</span>
+          </div>
+        {% empty %}
+          <p class="help-text">Список порожній.</p>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="panel panel-wide admin-list-panel">
+    <p class="eyebrow">Official results</p>
+    <h2>Повний офіційний порядок</h2>
+    <p>CSV header: final_rank,entry_id,country_name. Для збереження потрібні всі фіналісти рівно один раз.</p>
+    <form class="stacked-form" method="post">
+      {% csrf_token %}
+      <label class="form-field">
+        <span>{{ official_form.results_csv.label }}</span>
+        {{ official_form.results_csv }}
+      </label>
+      <div class="action-row">
+        <button class="button-secondary" type="submit" name="action" value="preview_official_results" {% if not edition or edition.state != "voting_closed" %}disabled{% endif %}>Preview / validation</button>
+        <button class="button-primary" type="submit" name="action" value="save_official_results" {% if not edition or edition.state != "voting_closed" %}disabled{% endif %}>Зберегти official results</button>
+      </div>
+    </form>
+    {% if official_preview %}
+      <div class="admin-entry-list official-preview">
+        {% for rank, entry in official_preview %}
+          <div class="admin-entry-row">
+            <span class="running-order">{{ rank }}</span>
+            <strong>{{ entry.country_name }}</strong>
+            <span>{{ entry.artist_name }} · {{ entry.song_title }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <div class="admin-grid">
+    <section class="panel admin-panel">
+      <p class="eyebrow">Scoring</p>
+      <h2>Бали користувачів</h2>
+      <div class="action-row">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="calculate_scores">
+          <button class="button-primary" type="submit" {% if not edition or edition.state != "official_results_entered" %}disabled{% endif %}>Запустити підрахунок</button>
+        </form>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="publish_scores">
+          <button class="button-secondary" type="submit" {% if not edition or edition.state != "official_results_entered" or not score_count %}disabled{% endif %}>Опублікувати рейтинги</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel admin-panel">
+      <p class="eyebrow">Audit log</p>
+      <h2>Останні дії</h2>
+      <div class="audit-list">
+        {% for log in audit_logs %}
+          <div class="audit-row">
+            <strong>{{ log.action }}</strong>
+            <span>{{ log.actor.username }} · {{ log.created_at|date:"d.m.Y H:i" }}</span>
+          </div>
+        {% empty %}
+          <p class="help-text">Admin actions ще не виконувались.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+{% endblock %}

@@ -1,10 +1,25 @@
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
-from contest.models import ContestEntry
+from contest.models import ContestEdition, ContestEntry
 from groups.models import GroupMembership
 
-from .models import ALLOWED_POINTS, REQUIRED_BALLOT_ITEMS, Ballot, BallotItem
+from .models import ALLOWED_POINTS, REQUIRED_BALLOT_ITEMS, Ballot, BallotItem, UserScore
+
+
+POINT_TO_PREDICTED_RANK = {
+    12: 1,
+    10: 2,
+    8: 3,
+    7: 4,
+    6: 5,
+    5: 6,
+    4: 7,
+    3: 8,
+    2: 9,
+    1: 10,
+}
 
 
 def get_available_voting_modes(user, edition):
@@ -37,6 +52,60 @@ def submit_ballot(*, user, edition, mode, assignments):
             return ballot
     except IntegrityError as exc:
         raise ValidationError("Ballot could not be submitted. It may already exist or contain duplicates.") from exc
+
+
+@transaction.atomic
+def calculate_user_scores(*, edition):
+    if edition.state != ContestEdition.STATE_OFFICIAL_RESULTS_ENTERED:
+        raise ValidationError("User scores can only be calculated after official results are entered.")
+    if edition.official_results.count() != edition.entries.count():
+        raise ValidationError("Official results must contain the full finalist order.")
+
+    official_by_mode = {
+        Ballot.MODE_WITH_UKRAINE: _official_top_by_mode(edition=edition, mode=Ballot.MODE_WITH_UKRAINE),
+        Ballot.MODE_WITHOUT_UKRAINE: _official_top_by_mode(edition=edition, mode=Ballot.MODE_WITHOUT_UKRAINE),
+    }
+    calculated_at = timezone.now()
+    count = 0
+
+    for ballot in Ballot.objects.filter(edition=edition).prefetch_related("items"):
+        official_top = official_by_mode[ballot.mode]
+        exact_hits = 0
+        wrong_place_hits = 0
+        for item in ballot.items.all():
+            predicted_rank = POINT_TO_PREDICTED_RANK[item.points]
+            official_rank = official_top.get(item.contest_entry_id)
+            if official_rank is None:
+                continue
+            if official_rank == predicted_rank:
+                exact_hits += 1
+            else:
+                wrong_place_hits += 1
+
+        UserScore.objects.update_or_create(
+            edition=edition,
+            user=ballot.user,
+            mode=ballot.mode,
+            defaults={
+                "exact_hits": exact_hits,
+                "top10_hits_wrong_place": wrong_place_hits,
+                "total_score": exact_hits * 2 + wrong_place_hits,
+                "calculated_at": calculated_at,
+            },
+        )
+        count += 1
+
+    return count
+
+
+@transaction.atomic
+def publish_user_scores(*, edition):
+    if edition.state != ContestEdition.STATE_OFFICIAL_RESULTS_ENTERED:
+        raise ValidationError("Scores can only be published after official results are entered.")
+    if not UserScore.objects.filter(edition=edition).exists():
+        raise ValidationError("Calculate user scores before publishing.")
+    edition.state = ContestEdition.STATE_SCORES_PUBLISHED
+    edition.save(update_fields=["state", "updated_at"])
 
 
 def _normalize_assignments(assignments):
@@ -95,3 +164,10 @@ def _validate_submission(*, user, edition, mode, normalized):
         raise ValidationError("Every ballot entry must belong to the current edition.")
     if mode == Ballot.MODE_WITHOUT_UKRAINE and any(entry.is_ukraine for entry in entries.values()):
         raise ValidationError("Ukraine cannot receive points in without_ukraine mode.")
+
+
+def _official_top_by_mode(*, edition, mode):
+    results = list(edition.official_results.select_related("contest_entry").order_by("final_rank"))
+    if mode == Ballot.MODE_WITHOUT_UKRAINE:
+        results = [result for result in results if not result.contest_entry.is_ukraine]
+    return {result.contest_entry_id: index for index, result in enumerate(results[:10], start=1)}

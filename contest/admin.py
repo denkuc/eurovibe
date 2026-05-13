@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ContestEdition, ContestEntry
+from .models import ContestEdition, ContestEntry, OfficialResult
 
 
 class ContestEntryInline(admin.TabularInline):
@@ -21,3 +21,9 @@ class ContestEntryAdmin(admin.ModelAdmin):
     list_filter = ("edition", "is_ukraine")
     search_fields = ("country_name", "country_code", "artist_name", "song_title")
 
+
+@admin.register(OfficialResult)
+class OfficialResultAdmin(admin.ModelAdmin):
+    list_display = ("edition", "final_rank", "contest_entry")
+    list_filter = ("edition",)
+    search_fields = ("contest_entry__country_name", "contest_entry__artist_name")

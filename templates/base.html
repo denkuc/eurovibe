@@ -23,7 +23,7 @@
             <a href="{% url 'groups:join_by_code' %}">Приєднатися</a>
             <a href="{% url 'voting:index' %}">Голосування</a>
             {% if current_user_is_superadmin %}
-              <a href="{% url 'accounts:superadmin_dashboard' %}">Superadmin</a>
+              <a href="{% url 'admin_panel:dashboard' %}">Superadmin</a>
             {% endif %}
             <span class="nav-user">{{ request.user.username }}</span>
             <form class="nav-form" method="post" action="{% url 'accounts:logout' %}">
