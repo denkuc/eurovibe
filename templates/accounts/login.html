@@ -10,6 +10,9 @@
       {% include "accounts/_form.html" %}
       <button class="button-primary" type="submit">Увійти</button>
     </form>
+    <p class="auth-switch">
+      Ще не маєте акаунта?
+      <a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Зареєструватися</a>
+    </p>
   </section>
 {% endblock %}
-

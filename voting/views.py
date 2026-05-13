@@ -59,12 +59,18 @@ def voting_home(request):
             "allowed_points": ALLOWED_POINTS,
             "ballot_items": ballot_items,
             "edition": edition,
-            "entries": entries,
+            "entries": _ordered_entries(entries, selected_mode),
             "existing_ballot": existing_ballot,
             "modes": modes,
             "selected_mode": selected_mode,
         },
     )
+
+
+def _ordered_entries(entries, selected_mode):
+    if selected_mode == Ballot.MODE_WITHOUT_UKRAINE:
+        return sorted(entries, key=lambda entry: (not entry.is_ukraine, entry.running_order))
+    return entries
 
 
 def _selected_mode(request, modes):

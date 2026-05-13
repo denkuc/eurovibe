@@ -5,6 +5,9 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from groups.models import FriendGroup
+from groups.services import join_group
+
 from .forms import LoginForm, RegisterForm
 from .roles import is_superadmin
 
@@ -20,6 +23,19 @@ def _safe_next_url(request, fallback):
     return fallback
 
 
+def _redirect_after_auth(request, fallback):
+    invite_token = request.session.pop("pending_group_invite_token", "")
+    if invite_token:
+        try:
+            group = FriendGroup.objects.get(invite_token=invite_token)
+        except FriendGroup.DoesNotExist:
+            pass
+        else:
+            join_group(group=group, user=request.user)
+            return redirect("groups:detail", group_id=group.id)
+    return redirect(_safe_next_url(request, fallback))
+
+
 def register(request):
     if request.user.is_authenticated:
         return redirect("groups:list")
@@ -29,7 +45,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect(_safe_next_url(request, reverse("groups:list")))
+            return _redirect_after_auth(request, reverse("groups:list"))
     else:
         form = RegisterForm()
 
@@ -51,7 +67,7 @@ def login_view(request):
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             login(request, form.get_user())
-            return redirect(_safe_next_url(request, reverse("groups:list")))
+            return _redirect_after_auth(request, reverse("groups:list"))
     else:
         form = LoginForm(request)
 

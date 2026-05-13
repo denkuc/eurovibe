@@ -251,7 +251,12 @@ class VotingViewTests(TestCase):
         self.assertContains(response, "Без України")
         self.assertContains(response, "vote-entry-ukraine locked")
         self.assertContains(response, "♥")
-        self.assertContains(response, "Sortable.min.js")
+        self.assertNotContains(response, "Sortable.min.js")
+        html = response.content.decode()
+        self.assertLess(html.find("Ukraine"), html.find("Country 1"))
+
+        with_ukraine_response = self.client.get(f"{reverse('voting:index')}?mode={Ballot.MODE_WITH_UKRAINE}")
+        self.assertNotContains(with_ukraine_response, "У режимі без України її картка видима")
 
     def test_post_submits_and_then_renders_readonly_ballot(self):
         create_group(owner=self.user, name="With", includes_ukraine=True)

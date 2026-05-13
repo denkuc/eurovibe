@@ -146,3 +146,4 @@ class ContestViewsTests(TestCase):
         self.assertContains(response, "Ukraine")
         self.assertContains(response, "🇺🇦")
         self.assertContains(response, "Ridne Svitlo")
+        self.assertNotContains(response, "<span>DZ</span>", html=True)

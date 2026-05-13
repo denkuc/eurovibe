@@ -82,6 +82,13 @@ class AccountsTests(TestCase):
 
         self.assertRedirects(response, reverse("accounts:dashboard"))
 
+    def test_login_and_register_pages_cross_link_with_next(self):
+        login_response = self.client.get(f"{reverse('accounts:login')}?next=/groups/invite/abc/")
+        register_response = self.client.get(f"{reverse('accounts:register')}?next=/groups/invite/abc/")
+
+        self.assertContains(login_response, f"{reverse('accounts:register')}?next=/groups/invite/abc/")
+        self.assertContains(register_response, f"{reverse('accounts:login')}?next=/groups/invite/abc/")
+
     def test_is_superadmin_helper(self):
         user = get_user_model().objects.create_user(username="regular")
         denkuc = get_user_model().objects.create_user(username="denkuc")

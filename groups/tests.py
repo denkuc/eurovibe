@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from contest.models import ContestEdition, ContestEntry
+from voting.models import Ballot
 
 from .models import FriendGroup, GroupMembership
 from .services import create_group
@@ -59,12 +60,38 @@ class GroupViewsTests(TestCase):
         self.assertEqual(group.name, "Група sofia")
         self.assertTrue(GroupMembership.objects.filter(group=group, user=self.user).exists())
 
+    def test_create_group_form_checkbox_is_unchecked_by_default(self):
+        response = self.client.get(reverse("groups:create"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["form"]["includes_ukraine"].value())
+
+    def test_create_group_form_does_not_default_to_ukraine_mode(self):
+        response = self.client.post(reverse("groups:create"), {"name": ""})
+
+        group = FriendGroup.objects.get(owner=self.user)
+        self.assertRedirects(response, reverse("groups:detail", args=[group.id]))
+        self.assertFalse(group.includes_ukraine)
+
     def test_detail_is_available_only_to_members(self):
         group = create_group(owner=self.other, name="Private", includes_ukraine=True)
 
         response = self.client.get(reverse("groups:detail", args=[group.id]))
 
         self.assertEqual(response.status_code, 404)
+
+    def test_detail_shows_member_voting_status_for_group_mode(self):
+        group = create_group(owner=self.user, name="Owned", includes_ukraine=False)
+        GroupMembership.objects.create(group=group, user=self.other)
+        edition = ContestEdition.objects.create(year=2026)
+        Ballot.objects.create(edition=edition, user=self.user, mode=Ballot.MODE_WITH_UKRAINE)
+        Ballot.objects.create(edition=edition, user=self.other, mode=Ballot.MODE_WITHOUT_UKRAINE)
+
+        response = self.client.get(reverse("groups:detail", args=[group.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ще не голосував")
+        self.assertContains(response, "Проголосував")
 
     def test_join_by_code_is_case_insensitive_and_does_not_duplicate(self):
         group = create_group(owner=self.other, name="Joinable", includes_ukraine=False)
@@ -85,6 +112,26 @@ class GroupViewsTests(TestCase):
         self.assertRedirects(response, reverse("groups:detail", args=[group.id]))
         self.assertRedirects(second_response, reverse("groups:detail", args=[group.id]))
         self.assertEqual(GroupMembership.objects.filter(group=group, user=self.user).count(), 1)
+
+    def test_anonymous_invite_is_saved_until_login(self):
+        group = create_group(owner=self.other, name="Invite", includes_ukraine=True)
+        self.client.logout()
+
+        response = self.client.get(reverse("groups:join_by_invite", args=[group.invite_token]))
+        self.assertRedirects(
+            response,
+            f"{reverse('accounts:login')}?next={reverse('groups:join_by_invite', args=[group.invite_token])}",
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.client.session["pending_group_invite_token"], group.invite_token)
+
+        login_response = self.client.post(
+            reverse("accounts:login"),
+            {"username": "sofia", "password": "very-long-passphrase"},
+        )
+
+        self.assertRedirects(login_response, reverse("groups:detail", args=[group.id]))
+        self.assertTrue(GroupMembership.objects.filter(group=group, user=self.user).exists())
 
     def test_owner_can_remove_other_member_but_not_self(self):
         group = create_group(owner=self.user, name="Owned", includes_ukraine=True)

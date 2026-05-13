@@ -4,6 +4,10 @@ from .models import FriendGroup
 
 
 class FriendGroupCreateForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["includes_ukraine"].initial = False
+
     class Meta:
         model = FriendGroup
         fields = ["name", "includes_ukraine"]

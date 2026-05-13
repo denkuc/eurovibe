@@ -1,3 +1,19 @@
+function setCopyButtonState(button, text) {
+  const originalText = button.dataset.originalText || button.textContent;
+  button.dataset.originalText = originalText;
+  button.textContent = text;
+  setTimeout(() => {
+    button.textContent = originalText;
+  }, 1400);
+}
+
+function fallbackCopy(source) {
+  source.focus();
+  source.select();
+  source.setSelectionRange(0, source.value.length);
+  return document.execCommand("copy");
+}
+
 document.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-copy-button]");
   if (!button) {
@@ -11,15 +27,32 @@ document.addEventListener("click", async (event) => {
   }
 
   try {
-    await navigator.clipboard.writeText(source.value);
-    button.textContent = "Copied";
-    setTimeout(() => {
-      button.textContent = "Copy";
-    }, 1400);
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(source.value);
+    } else if (!fallbackCopy(source)) {
+      throw new Error("Copy failed");
+    }
+    setCopyButtonState(button, "Скопійовано");
   } catch {
-    source.focus();
-    source.select();
+    fallbackCopy(source);
+    setCopyButtonState(button, "Виділено");
   }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.isComposing || event.defaultPrevented) {
+    return;
+  }
+  const target = event.target;
+  if (!target || !target.form || target.matches("textarea, button, [type='submit']")) {
+    return;
+  }
+  const submitButton = target.form.querySelector("button[type='submit'], input[type='submit']");
+  if (!submitButton || submitButton.disabled) {
+    return;
+  }
+  event.preventDefault();
+  submitButton.click();
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -30,9 +63,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const board = form.querySelector(".entry-board");
   const mode = form.dataset.mode;
-  const pointOrder = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
   const allowedPoints = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
   let selectedPoint = null;
+  let draggedPoint = null;
 
   const pointInputs = new Map(
     [...form.querySelectorAll("[data-point-input]")].map((input) => [Number(input.dataset.pointInput), input]),
@@ -71,14 +104,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function assignPoint(points, entryId) {
+  function setPoint(points, entryId) {
     clearEntry(entryId);
     const input = pointInputs.get(points);
     if (input) {
       input.value = entryId;
     }
+  }
+
+  function assignPoint(points, entryId) {
+    setPoint(points, entryId);
     selectedPoint = null;
     render();
+  }
+
+  function isLocked(card) {
+    return mode === "without_ukraine" && card.dataset.isUkraine === "true";
   }
 
   function showToast(message) {
@@ -105,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chip.classList.toggle("selected", selectedPoint === points);
       chip.classList.toggle("used", isUsed);
       chip.disabled = isUsed && selectedPoint !== points;
+      chip.draggable = !isUsed;
       chip.setAttribute("aria-pressed", selectedPoint === points ? "true" : "false");
     });
 
@@ -113,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const points = entryAssignedPoint(entryId);
       const scoreCell = card.querySelector("[data-score-cell]");
       card.classList.toggle("assigned", Boolean(points));
+      card.draggable = false;
       card.dataset.assignedPoints = points || "";
       if (points) {
         scoreCell.textContent = points;
@@ -124,6 +167,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const sorted = [...cards].sort((left, right) => {
+      if (mode === "without_ukraine") {
+        const leftIsUkraine = left.dataset.isUkraine === "true";
+        const rightIsUkraine = right.dataset.isUkraine === "true";
+        if (leftIsUkraine !== rightIsUkraine) {
+          return leftIsUkraine ? -1 : 1;
+        }
+      }
       const leftPoints = Number(left.dataset.assignedPoints || 0);
       const rightPoints = Number(right.dataset.assignedPoints || 0);
       if (leftPoints || rightPoints) {
@@ -148,9 +198,40 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedPoint = selectedPoint === points ? null : points;
       render();
     });
+
+    chip.addEventListener("dragstart", (event) => {
+      if (assignments().has(points)) {
+        event.preventDefault();
+        return;
+      }
+      draggedPoint = points;
+      event.dataTransfer.effectAllowed = "copy";
+      event.dataTransfer.setData("text/plain", String(points));
+    });
+
+    chip.addEventListener("dragend", () => {
+      draggedPoint = null;
+    });
   });
 
   cards.forEach((card) => {
+    card.addEventListener("dragover", (event) => {
+      if (!draggedPoint || isLocked(card)) {
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    });
+
+    card.addEventListener("drop", (event) => {
+      if (!draggedPoint || isLocked(card)) {
+        return;
+      }
+      event.preventDefault();
+      assignPoint(draggedPoint, card.dataset.entryId);
+      draggedPoint = null;
+    });
+
     card.querySelector("[data-entry-button]").addEventListener("click", () => {
       const entryId = card.dataset.entryId;
       if (mode === "without_ukraine" && card.dataset.isUkraine === "true") {
@@ -178,26 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
     }
   });
-
-  function applySortableOrder() {
-    const assignedCards = [...board.querySelectorAll("[data-entry-card].assigned")];
-    assignedCards.forEach((card, index) => {
-      clearEntry(card.dataset.entryId);
-      const points = pointOrder[index];
-      if (points) {
-        pointInputs.get(points).value = card.dataset.entryId;
-      }
-    });
-    render();
-  }
-
-  if (window.Sortable && board) {
-    window.Sortable.create(board, {
-      animation: 150,
-      draggable: "[data-entry-card].assigned",
-      onEnd: applySortableOrder,
-    });
-  }
 
   allowedPoints.forEach((points) => {
     const input = pointInputs.get(points);

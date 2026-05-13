@@ -1,9 +1,14 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+
+from contest.services import get_current_edition
+from voting.models import Ballot
 
 from .forms import FriendGroupCreateForm, GroupModeForm, JoinByCodeForm
 from .models import FriendGroup
@@ -41,7 +46,7 @@ def group_create(request):
             messages.success(request, "Групу створено.")
             return redirect("groups:detail", group_id=group.id)
     else:
-        form = FriendGroupCreateForm(initial={"includes_ukraine": True})
+        form = FriendGroupCreateForm()
     return render(request, "groups/create.html", {"form": form})
 
 
@@ -49,7 +54,21 @@ def group_create(request):
 def group_detail(request, group_id):
     group = get_member_group_or_404(group_id=group_id, user=request.user)
     invite_url = request.build_absolute_uri(reverse("groups:join_by_invite", args=[group.invite_token]))
-    memberships = group.memberships.select_related("user")
+    memberships = list(group.memberships.select_related("user"))
+    edition = get_current_edition()
+    voted_user_ids = set()
+    if edition:
+        mode = Ballot.MODE_WITH_UKRAINE if group.includes_ukraine else Ballot.MODE_WITHOUT_UKRAINE
+        voted_user_ids = set(
+            Ballot.objects.filter(
+                edition=edition,
+                mode=mode,
+                user_id__in=[membership.user_id for membership in memberships],
+            ).values_list("user_id", flat=True),
+        )
+    for membership in memberships:
+        membership.has_voted = membership.user_id in voted_user_ids
+
     mode_form = GroupModeForm(instance=group)
     return render(
         request,
@@ -78,9 +97,13 @@ def join_by_code(request):
     return render(request, "groups/join.html", {"form": form})
 
 
-@login_required
 def join_by_invite(request, invite_token):
     group = get_object_or_404(FriendGroup, invite_token=invite_token)
+    if not request.user.is_authenticated:
+        request.session["pending_group_invite_token"] = invite_token
+        login_url = reverse("accounts:login")
+        return redirect(f"{login_url}?{urlencode({'next': request.get_full_path()})}")
+
     join_group(group=group, user=request.user)
     return redirect("groups:detail", group_id=group.id)
 

@@ -21,6 +21,9 @@
             <span>
               {% if membership.user_id == group.owner_id %}👑 {% endif %}{{ membership.user.username }}
             </span>
+            <span class="vote-status{% if membership.has_voted %} vote-status-done{% endif %}">
+              {% if membership.has_voted %}Проголосував{% else %}Ще не голосував{% endif %}
+            </span>
             {% if is_owner and membership.user_id != group.owner_id %}
               <form method="post" action="{% url 'groups:remove_member' group.id membership.user_id %}">
                 {% csrf_token %}

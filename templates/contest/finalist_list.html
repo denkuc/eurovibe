@@ -22,7 +22,7 @@
         <article class="finalist-row{% if entry.is_ukraine %} finalist-row-ukraine{% endif %}">
           <div class="running-order">{{ entry.running_order }}</div>
           <div>
-            <h2><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }} <span>{{ entry.country_code }}</span></h2>
+            <h2><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }}</h2>
             <p>{{ entry.artist_name }} · {{ entry.song_title }}</p>
           </div>
           {% if entry.is_ukraine %}
