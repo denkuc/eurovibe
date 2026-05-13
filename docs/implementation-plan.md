@@ -424,6 +424,13 @@ BallotItem:
 - Tie-break deterministic.
 - Рейтинги не падають на порожніх даних.
 
+### Хід виконання
+
+- 2026-05-13: Додано app `leaderboards` із country leaderboard aggregation service для global і group scopes, mode-aware group aggregation, deterministic tie-break і коротким cache TTL для global рейтингу.
+- 2026-05-13: Додано публічний `/leaderboards/countries/`, приватний `/leaderboards/groups/<id>/countries/`, навігаційні посилання, SSR-шаблон рейтингу й polling refresh раз на 12 секунд.
+- 2026-05-13: Додано тести для anonymous global access, group membership guard, mode-aware групової агрегації, deterministic tie-break і порожніх/нульових даних.
+- 2026-05-13: Перейменовано top-level навігацію на `Рейтинги`; сторінка рейтингів отримала сабтаби `Глобально` і доступні групи друзів.
+
 ## 10. Етап 9: Суперадмінський backoffice
 
 ### Access

@@ -17,7 +17,7 @@
         </a>
         <nav class="topnav" aria-label="Головна навігація">
           <a class="{% if request.resolver_match.namespace == 'contest' %}active{% endif %}" href="{% url 'contest:finalist_list' %}" {% if request.resolver_match.namespace == 'contest' %}aria-current="page"{% endif %}>Фіналісти</a>
-          <a href="#">Глобальні рейтинги</a>
+          <a class="{% if request.resolver_match.namespace == 'leaderboards' %}active{% endif %}" href="{% url 'leaderboards:global_countries' %}" {% if request.resolver_match.namespace == 'leaderboards' %}aria-current="page"{% endif %}>Рейтинги</a>
           {% if request.user.is_authenticated %}
             <a class="{% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name != 'join_by_code' %}active{% endif %}" href="{% url 'groups:list' %}" {% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name != 'join_by_code' %}aria-current="page"{% endif %}>Мої групи</a>
             <a class="{% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name == 'join_by_code' %}active{% endif %}" href="{% url 'groups:join_by_code' %}" {% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name == 'join_by_code' %}aria-current="page"{% endif %}>Приєднатися</a>

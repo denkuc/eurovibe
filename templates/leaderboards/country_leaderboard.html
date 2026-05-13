@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load contest_extras %}
+
+{% block title %}Рейтинги · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel panel-wide leaderboard-hero" data-poll-refresh="{{ poll_seconds|default:12 }}">
+    <p class="eyebrow">Рейтинги</p>
+    <h1>{{ scope_label }}</h1>
+    {% if edition %}
+      <div class="meta-row">
+        <span class="state-pill">Edition {{ edition.year }}</span>
+        <span class="state-pill">{{ mode_label }}</span>
+      </div>
+    {% else %}
+      <p>Поки немає активного edition.</p>
+    {% endif %}
+  </section>
+
+  <nav class="leaderboard-tabs" aria-label="Розділи рейтингів">
+    {% for tab in leaderboard_tabs %}
+      {% if tab.scope == "global" %}
+        <a class="{% if scope == 'global' %}active{% endif %}" href="{% url 'leaderboards:global_countries' %}" {% if scope == 'global' %}aria-current="page"{% endif %}>{{ tab.label }}</a>
+      {% else %}
+        <a class="{% if group and group.id == tab.group.id %}active{% endif %}" href="{% url 'leaderboards:group_countries' tab.group.id %}" {% if group and group.id == tab.group.id %}aria-current="page"{% endif %}>{{ tab.label }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  {% if rows %}
+    <section class="leaderboard-list" aria-label="Рейтинг країн">
+      {% for row in rows %}
+        <article class="leaderboard-row{% if row.is_ukraine %} leaderboard-row-ukraine{% endif %}">
+          <div class="leaderboard-rank">{{ forloop.counter }}</div>
+          <div class="leaderboard-country">
+            <h2><span class="country-flag" aria-hidden="true">{{ row.country_code|country_flag }}</span> {{ row.country_name }}</h2>
+            <p>{{ row.artist_name }} · {{ row.song_title }}</p>
+          </div>
+          <div class="leaderboard-score">
+            <strong>{{ row.total_points }}</strong>
+            <span>балів</span>
+          </div>
+          <dl class="leaderboard-breakdown">
+            <div>
+              <dt>Voters</dt>
+              <dd>{{ row.number_of_voters }}</dd>
+            </div>
+            <div>
+              <dt>12</dt>
+              <dd>{{ row.count_12 }}</dd>
+            </div>
+            <div>
+              <dt>10</dt>
+              <dd>{{ row.count_10 }}</dd>
+            </div>
+            <div>
+              <dt>8</dt>
+              <dd>{{ row.count_8 }}</dd>
+            </div>
+          </dl>
+        </article>
+      {% endfor %}
+    </section>
+  {% else %}
+    <section class="panel">
+      <h2 class="section-title">Ще немає даних</h2>
+      <p>Рейтинг зʼявиться після появи фіналістів і перших бюлетенів.</p>
+    </section>
+  {% endif %}
+{% endblock %}

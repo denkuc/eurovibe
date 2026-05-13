@@ -9,6 +9,7 @@
     <div class="meta-row">
       <span class="state-pill{% if not group.includes_ukraine %} state-pill-gold{% endif %}">{{ group.mode_label }}</span>
       {% if is_owner %}<span class="state-pill">👑 власник</span>{% endif %}
+      <a class="button-secondary button-compact" href="{% url 'leaderboards:group_countries' group.id %}">Рейтинг країн</a>
     </div>
   </section>
 

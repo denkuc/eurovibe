@@ -56,6 +56,24 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  const refreshTarget = document.querySelector("[data-poll-refresh]");
+  if (!refreshTarget) {
+    return;
+  }
+
+  const seconds = Number(refreshTarget.dataset.pollRefresh || 12);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return;
+  }
+
+  setTimeout(() => {
+    if (document.visibilityState === "visible") {
+      window.location.reload();
+    }
+  }, seconds * 1000);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
   const form = document.querySelector("[data-voting-form]");
   if (!form) {
     return;

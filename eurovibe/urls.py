@@ -18,6 +18,7 @@ urlpatterns = [
     path("superadmin/", include("admin_panel.urls")),
     path("contest/", include("contest.urls")),
     path("groups/", include("groups.urls")),
+    path("leaderboards/", include("leaderboards.urls")),
     path("voting/", include("voting.urls")),
     path("healthz/", healthz, name="healthz"),
     path("admin/", admin.site.urls),

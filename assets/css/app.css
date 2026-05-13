@@ -326,6 +326,12 @@
     border-color: rgba(255, 95, 122, 0.42);
   }
 
+  .button-compact {
+    min-height: 2.2rem;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.9rem;
+  }
+
   .action-row,
   .meta-row {
     display: flex;
@@ -815,6 +821,166 @@
     opacity: 0.48;
   }
 
+  .leaderboard-hero h1 {
+    margin: 0.2rem 0 0.35rem;
+    font-size: clamp(1.65rem, 4vw, 2.45rem);
+    line-height: 1;
+  }
+
+  .leaderboard-hero {
+    padding: 0.95rem 1.1rem;
+  }
+
+  .leaderboard-hero .meta-row {
+    margin-top: 0.65rem;
+  }
+
+  .leaderboard-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    width: min(100%, 64rem);
+    margin: 0 0 0.9rem;
+    padding: 0.3rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  .leaderboard-tabs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.1rem;
+    padding: 0.42rem 0.65rem;
+    border-radius: 6px;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  .leaderboard-tabs a.active,
+  .leaderboard-tabs a:hover,
+  .leaderboard-tabs a:focus-visible {
+    color: #08051c;
+    background: linear-gradient(135deg, var(--color-cyan), var(--color-magenta));
+    outline: none;
+  }
+
+  .leaderboard-list {
+    display: grid;
+    gap: 0.4rem;
+    width: min(100%, 64rem);
+  }
+
+  .leaderboard-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) minmax(5rem, auto) minmax(13rem, 0.45fr);
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 3.75rem;
+    padding: 0.48rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  }
+
+  .leaderboard-row-ukraine {
+    border-color: rgba(255, 216, 107, 0.72);
+    background: linear-gradient(135deg, rgba(255, 216, 107, 0.18), rgba(255, 255, 255, 0.06));
+  }
+
+  .leaderboard-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 999px;
+    color: var(--color-cyan);
+    font-weight: 900;
+    background: rgba(66, 232, 255, 0.1);
+  }
+
+  .leaderboard-country {
+    display: grid;
+    min-width: 0;
+    gap: 0.15rem;
+  }
+
+  .leaderboard-country h2,
+  .leaderboard-country p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .leaderboard-country h2 {
+    font-size: 0.98rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .leaderboard-country p {
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
+  .leaderboard-score {
+    display: grid;
+    justify-items: end;
+    gap: 0;
+    min-width: 4.5rem;
+  }
+
+  .leaderboard-score strong {
+    color: var(--color-text);
+    font-size: 1.2rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .leaderboard-score span {
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .leaderboard-breakdown {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.28rem;
+    margin: 0;
+  }
+
+  .leaderboard-breakdown div {
+    display: grid;
+    justify-items: center;
+    gap: 0.05rem;
+    min-width: 0;
+    padding: 0.24rem 0.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: rgba(9, 5, 31, 0.36);
+  }
+
+  .leaderboard-breakdown dt,
+  .leaderboard-breakdown dd {
+    margin: 0;
+  }
+
+  .leaderboard-breakdown dt {
+    color: var(--color-muted);
+    font-size: 0.64rem;
+    font-weight: 800;
+  }
+
+  .leaderboard-breakdown dd {
+    color: var(--color-text);
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
   .admin-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -931,6 +1097,15 @@
     .detail-grid,
     .admin-grid {
       grid-template-columns: 1fr;
+    }
+
+    .leaderboard-row {
+      grid-template-columns: 2.6rem minmax(0, 1fr) minmax(4rem, auto);
+      align-items: start;
+    }
+
+    .leaderboard-breakdown {
+      grid-column: 2 / -1;
     }
 
     .finalist-row {

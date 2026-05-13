@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     "admin_panel",
     "contest",
     "groups",
+    "leaderboards",
     "voting",
     "django.contrib.admin",
     "django.contrib.auth",
