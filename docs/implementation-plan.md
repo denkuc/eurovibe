@@ -321,6 +321,13 @@ BallotItem:
 - Неможливо submit неповний або дубльований набір points.
 - Неможливо submit Україну в `without_ukraine`.
 
+### Хід виконання
+
+- 2026-05-13: Додано app `voting` із моделями `Ballot` і `BallotItem`, режимами `with_ukraine` / `without_ukraine`, `immutable` ballot state, allowed points constraint і unique constraints для `edition + user + mode`, points та entries у межах ballot.
+- 2026-05-13: Реалізовано `get_available_voting_modes(user, edition)` на основі membership у групах `includes_ukraine=True/False`.
+- 2026-05-13: Реалізовано атомарний `submit_ballot(user, edition, mode, assignments)` із серверною validation для `voting_open`, доступу до режиму, duplicate submit, рівно 10 оцінок, allowed/unique points, entries поточної edition і заборони України в `without_ukraine`.
+- 2026-05-13: Додано Django admin registration, міграцію `voting.0001_initial` і тести доменних інваріантів; перевірено `manage.py check`, `manage.py test voting` і повний `manage.py test`.
+
 ## 8. Етап 7: UI голосування
 
 ### Desktop layout
@@ -378,6 +385,15 @@ BallotItem:
 - Submit без JS або з підробленим payload усе одно проходить серверну validation.
 - Submitted ballot неможливо змінити через UI і через повторний POST.
 - Україна помітна в `without_ukraine`, але не оцінюється.
+
+### Хід виконання
+
+- 2026-05-13: Додано `/voting/` із login guard, mode tabs для користувачів із двома режимами, empty states для закритого голосування/відсутності груп і readonly state для вже submitted ballot.
+- 2026-05-13: Реалізовано SSR voting form із desktop layout `2fr/1fr`, mobile sticky bottom points tray, tap-to-assign fallback, disabled submit до 10 оцінок і confirm warning про незмінність бюлетеня.
+- 2026-05-13: Підключено SortableJS тільки в шаблоні голосування; JS підтримує локальне призначення балів, зняття бала, сортування scored entries за points desc і повернення unscored entries до running order.
+- 2026-05-13: Додано no-JS fallback через native selects; POST і підроблений payload проходять через `submit_ballot()` validation з етапу 6.
+- 2026-05-13: Для `without_ukraine` Україна залишається видимою зі світло-золотим state, heart marker і toast при спробі оцінити; бекенд відхиляє такий submit.
+- 2026-05-13: Виправлено прапори фіналістів через template filter `country_flag`, який перетворює ISO country code на regional indicator emoji.
 
 ## 9. Етап 8: Рейтинги країн
 

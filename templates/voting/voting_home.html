@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load contest_extras %}
+
+{% block title %}Голосування · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel panel-wide voting-header">
+    <p class="eyebrow">Voting</p>
+    <h1>Голосування</h1>
+    {% if edition %}
+      <p>Edition {{ edition.year }} · state <span class="state-pill">{{ edition.get_state_display }}</span></p>
+    {% else %}
+      <p>Поточний конкурс ще не створено.</p>
+    {% endif %}
+  </section>
+
+  {% if not edition or not edition.can_vote %}
+    <section class="empty-state">
+      <h2>Голосування ще не відкрите</h2>
+      <p>Коли суперадмін відкриє голосування, тут зʼявиться бюлетень для доступних тобі режимів.</p>
+    </section>
+  {% elif not modes %}
+    <section class="empty-state">
+      <h2>Немає доступного режиму</h2>
+      <p>Приєднайся до групи, щоб отримати режим голосування з Україною або без України.</p>
+      <div class="action-row">
+        <a class="button-primary" href="{% url 'groups:join_by_code' %}">Приєднатися</a>
+        <a class="button-secondary" href="{% url 'groups:create' %}">Створити групу</a>
+      </div>
+    </section>
+  {% else %}
+    {% if modes|length > 1 %}
+      <nav class="mode-tabs" aria-label="Режими голосування">
+        {% for mode in modes %}
+          <a class="{% if mode == selected_mode %}active{% endif %}" href="{% url 'voting:index' %}?mode={{ mode }}">
+            {% if mode == "with_ukraine" %}З Україною{% else %}Без України{% endif %}
+          </a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+
+    {% if existing_ballot %}
+      <section class="panel panel-wide">
+        <p class="eyebrow">Submitted</p>
+        <h1>Бюлетень підтверджено</h1>
+        <p>Цей режим уже надіслано {{ existing_ballot.submitted_at|date:"d.m.Y H:i" }}. Змінити бюлетень неможливо.</p>
+      </section>
+      <section class="readonly-ballot" aria-label="Підтверджений бюлетень">
+        {% for item in ballot_items %}
+          <article class="readonly-ballot-row">
+            <div class="point-badge">{{ item.points }}</div>
+            <div>
+              <h2><span class="country-flag" aria-hidden="true">{{ item.contest_entry.country_code|country_flag }}</span> {{ item.contest_entry.country_name }}</h2>
+              <p>{{ item.contest_entry.artist_name }} · {{ item.contest_entry.song_title }}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+    {% else %}
+      <form class="voting-form" method="post" data-voting-form data-mode="{{ selected_mode }}">
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="{{ selected_mode }}">
+        {% for points in allowed_points %}
+          <input type="hidden" name="points_{{ points }}" data-point-input="{{ points }}">
+        {% endfor %}
+
+        <div class="voting-layout">
+          <section class="entry-board" aria-label="Країни">
+            {% for entry in entries %}
+              <article
+                class="vote-entry{% if selected_mode == 'without_ukraine' and entry.is_ukraine %} vote-entry-ukraine locked{% endif %}"
+                data-entry-card
+                data-entry-id="{{ entry.id }}"
+                data-running-order="{{ entry.running_order }}"
+                data-is-ukraine="{% if entry.is_ukraine %}true{% else %}false{% endif %}"
+              >
+                <button class="vote-entry-button" type="button" data-entry-button {% if selected_mode == "without_ukraine" and entry.is_ukraine %}aria-describedby="ukraine-rule"{% endif %}>
+                  <span class="running-order">{{ entry.running_order }}</span>
+                  <span class="vote-entry-copy">
+                    <strong><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }}</strong>
+                    <span>{{ entry.artist_name }} · {{ entry.song_title }}</span>
+                  </span>
+                  <span class="entry-score-cell" data-score-cell>
+                    {% if selected_mode == "without_ukraine" and entry.is_ukraine %}
+                      <span aria-label="Україна не оцінюється в цьому режимі">♥</span>
+                    {% endif %}
+                  </span>
+                </button>
+              </article>
+            {% endfor %}
+          </section>
+
+          <aside class="points-tray" aria-label="Бали">
+            <div class="points-tray-inner">
+              <p class="eyebrow">Points</p>
+              <div class="points-grid" data-points-tray>
+                {% for points in allowed_points %}
+                  <button class="point-chip" type="button" data-point-chip="{{ points }}">{{ points }}</button>
+                {% endfor %}
+              </div>
+              <p class="help-text" id="ukraine-rule">У режимі без України її картка видима, але не приймає бали.</p>
+              <div class="vote-progress" data-vote-progress>0 / 10</div>
+              <button class="button-primary vote-submit" type="submit" disabled data-submit-button>
+                Підтвердити голосування
+              </button>
+            </div>
+          </aside>
+        </div>
+
+        <noscript>
+          <section class="panel panel-wide noscript-ballot">
+            <p class="eyebrow">No JavaScript</p>
+            <h2>Резервна форма</h2>
+            <p>Обери країну для кожного бала. Сервер перевірить повноту й дублікати перед збереженням.</p>
+            <div class="noscript-grid">
+              {% for points in allowed_points %}
+                <label class="form-field">
+                  <span>{{ points }} points</span>
+                  <select name="points_{{ points }}">
+                    <option value="">Не обрано</option>
+                    {% for entry in entries %}
+                      <option value="{{ entry.id }}" {% if selected_mode == "without_ukraine" and entry.is_ukraine %}disabled{% endif %}>
+                        {{ entry.running_order }}. {{ entry.country_name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </label>
+              {% endfor %}
+            </div>
+            <button class="button-primary" type="submit">Підтвердити голосування</button>
+          </section>
+        </noscript>
+      </form>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
+{% endblock %}

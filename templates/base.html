@@ -21,6 +21,7 @@
           {% if request.user.is_authenticated %}
             <a href="{% url 'groups:list' %}">Мої групи</a>
             <a href="{% url 'groups:join_by_code' %}">Приєднатися</a>
+            <a href="{% url 'voting:index' %}">Голосування</a>
             {% if current_user_is_superadmin %}
               <a href="{% url 'accounts:superadmin_dashboard' %}">Superadmin</a>
             {% endif %}
@@ -48,5 +49,6 @@
       </main>
     </div>
     <script src="{% static 'js/app.js' %}" defer></script>
+    {% block scripts %}{% endblock %}
   </body>
 </html>

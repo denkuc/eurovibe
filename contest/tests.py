@@ -144,4 +144,5 @@ class ContestViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Фіналісти")
         self.assertContains(response, "Ukraine")
+        self.assertContains(response, "🇺🇦")
         self.assertContains(response, "Ridne Svitlo")
