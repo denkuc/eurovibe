@@ -84,6 +84,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 INSTALLED_APPS = [
     "accounts",
     "contest",
+    "groups",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -135,7 +136,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "accounts:dashboard"
+LOGIN_REDIRECT_URL = "groups:list"
 LOGOUT_REDIRECT_URL = "home"
 
 LANGUAGE_CODE = "uk"

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Приєднатися · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="auth-card">
+    <p class="eyebrow">Код групи</p>
+    <h1>Приєднатися</h1>
+    <form method="post">
+      {% include "accounts/_form.html" %}
+      <button class="button-primary" type="submit">Увійти в групу</button>
+    </form>
+  </section>
+{% endblock %}

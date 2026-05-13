@@ -221,12 +221,23 @@
     gap: 0.4rem;
   }
 
+  .form-field-checkbox {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .form-field-checkbox .help-text,
+  .form-field-checkbox .form-errors {
+    grid-column: 1 / -1;
+  }
+
   .form-field label {
     color: var(--color-text);
     font-weight: 700;
   }
 
-  .form-field input {
+  .form-field input:not([type="checkbox"]),
+  .form-field select {
     width: 100%;
     min-height: 2.8rem;
     padding: 0.65rem 0.75rem;
@@ -236,7 +247,14 @@
     background: rgba(9, 5, 31, 0.72);
   }
 
-  .form-field input:focus-visible {
+  .form-field input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--color-cyan);
+  }
+
+  .form-field input:focus-visible,
+  .form-field select:focus-visible {
     border-color: var(--color-cyan);
     outline: 2px solid rgba(66, 232, 255, 0.26);
     outline-offset: 2px;
@@ -266,6 +284,57 @@
     background: linear-gradient(135deg, var(--color-cyan), var(--color-magenta));
   }
 
+  .button-secondary,
+  .button-danger {
+    min-height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.075);
+  }
+
+  .button-danger {
+    color: var(--color-danger);
+    border-color: rgba(255, 95, 122, 0.42);
+  }
+
+  .action-row,
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+  }
+
+  .toast-stack {
+    display: grid;
+    gap: 0.6rem;
+    width: min(100%, 56rem);
+    margin-bottom: 1rem;
+  }
+
+  .toast {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .toast-success {
+    border-color: rgba(92, 255, 177, 0.42);
+  }
+
+  .toast-error {
+    border-color: rgba(255, 95, 122, 0.42);
+  }
+
   .role-note {
     margin-top: 1rem;
     color: var(--color-gold);
@@ -287,6 +356,103 @@
     color: #161006;
     border-color: rgba(255, 216, 107, 0.7);
     background: var(--color-gold);
+  }
+
+  .group-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .group-card,
+  .empty-state {
+    display: grid;
+    gap: 0.7rem;
+    min-height: 11rem;
+    padding: 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .group-card h2,
+  .empty-state h2,
+  .section-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  .group-card p,
+  .empty-state p {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .owner-note {
+    color: var(--color-gold) !important;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .member-list,
+  .invite-stack,
+  .stacked-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .member-row:last-child {
+    border-bottom: 0;
+  }
+
+  .label-text {
+    margin: 0 0 0.3rem;
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .join-code {
+    margin: 0;
+    color: var(--color-cyan);
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+  }
+
+  .copy-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+  }
+
+  .copy-input {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: var(--color-muted);
+    background: rgba(9, 5, 31, 0.72);
   }
 
   .finalist-list {
@@ -353,6 +519,11 @@
     }
 
     .foundation-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .group-grid,
+    .detail-grid {
       grid-template-columns: 1fr;
     }
 

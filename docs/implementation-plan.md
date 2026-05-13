@@ -263,6 +263,13 @@ GroupMembership:
 - Після `voting_open` `includes_ukraine` заблокований.
 - Join code lookup працює case-insensitive.
 
+### Хід виконання
+
+- 2026-05-13: Додано app `groups` із моделями `FriendGroup` і `GroupMembership`, унікальним membership constraint, автогенерацією 6-символьного uppercase join code і довгого URL-safe invite token.
+- 2026-05-13: Реалізовано створення групи, список `Мої групи`, detail-сторінку з учасниками, режимом, кодом, invite link і copy button.
+- 2026-05-13: Реалізовано join by code та invite link без дублювання membership, owner actions для видалення учасників, оновлення коду/лінка і зміни `includes_ukraine` лише в `setup`.
+- 2026-05-13: Додано навігацію, стилі, Django admin registration і тести для create/join/list/detail/owner guards/state lock.
+
 ## 7. Етап 6: Domain model голосування
 
 ### Моделі

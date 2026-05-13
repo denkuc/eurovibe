@@ -16,7 +16,7 @@ class AccountsTests(TestCase):
             },
         )
 
-        self.assertRedirects(response, reverse("accounts:dashboard"))
+        self.assertRedirects(response, reverse("groups:list"))
         self.assertTrue(get_user_model().objects.filter(username="sofia").exists())
         self.assertEqual(int(self.client.session["_auth_user_id"]), get_user_model().objects.get(username="sofia").id)
 
@@ -57,7 +57,7 @@ class AccountsTests(TestCase):
             reverse("accounts:login"),
             {"username": "maks", "password": "very-long-passphrase"},
         )
-        self.assertRedirects(login_response, reverse("accounts:dashboard"))
+        self.assertRedirects(login_response, reverse("groups:list"))
 
         logout_response = self.client.post(reverse("accounts:logout"))
         self.assertRedirects(logout_response, reverse("home"))

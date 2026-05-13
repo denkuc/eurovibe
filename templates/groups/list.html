@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Мої групи · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel panel-wide">
+    <p class="eyebrow">Групи друзів</p>
+    <h1>Мої групи</h1>
+    <p>Створюй окремі компанії для голосування або приєднуйся до друзів за кодом.</p>
+    <div class="action-row">
+      <a class="button-primary" href="{% url 'groups:create' %}">Створити групу</a>
+      <a class="button-secondary" href="{% url 'groups:join_by_code' %}">Приєднатися</a>
+    </div>
+  </section>
+
+  {% if groups %}
+    <section class="group-grid" aria-label="Список груп">
+      {% for group in groups %}
+        <a class="group-card" href="{% url 'groups:detail' group.id %}">
+          <span class="state-pill{% if not group.includes_ukraine %} state-pill-gold{% endif %}">{{ group.mode_label }}</span>
+          <h2>{{ group.display_name }}</h2>
+          <p>{{ group.memberships.count }} учасників</p>
+          {% if group.owner_id == request.user.id %}
+            <p class="owner-note">👑 ти власник</p>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </section>
+  {% else %}
+    <section class="empty-state">
+      <h2>Груп ще немає</h2>
+      <p>Почни зі створення групи або введи код, який дав друг.</p>
+    </section>
+  {% endif %}
+{% endblock %}

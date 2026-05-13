@@ -10,9 +10,14 @@
 {% endif %}
 
 {% for field in form %}
-  <div class="form-field">
-    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-    {{ field }}
+  <div class="form-field{% if field.field.widget.input_type == 'checkbox' %} form-field-checkbox{% endif %}">
+    {% if field.field.widget.input_type == "checkbox" %}
+      {{ field }}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% else %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+    {% endif %}
     {% if field.help_text %}
       <p class="help-text">{{ field.help_text }}</p>
     {% endif %}
@@ -21,4 +26,3 @@
     {% endif %}
   </div>
 {% endfor %}
-
