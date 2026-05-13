@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Реєстрація · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="auth-card">
+    <p class="eyebrow">New account</p>
+    <h1>Реєстрація</h1>
+    <form method="post" action="{% url 'accounts:register' %}">
+      {% include "accounts/_form.html" %}
+      <button class="button-primary" type="submit">Створити акаунт</button>
+    </form>
+  </section>
+{% endblock %}

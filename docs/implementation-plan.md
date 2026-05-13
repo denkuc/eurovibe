@@ -61,6 +61,7 @@ eurovibe/
 - 2026-05-13: Додано Tailwind CLI setup (`package.json`, `tailwind.config.js`, `assets/css/app.css`) із checked-in compiled CSS для `collectstatic`.
 - 2026-05-13: Перевірено `npm run build:css`, `python manage.py check`, `collectstatic`, `migrate`, `runserver`; `/healthz/` і `/` повертають HTTP 200.
 - 2026-05-13: Додано README з інструкціями локального та Docker запуску, `Dockerfile`, `docker-compose.yml` і `.dockerignore`; перевірено Docker build і Compose запуск з Postgres, `/healthz/` та `/` повертають HTTP 200.
+- 2026-05-13: Додано accounts foundation: app `accounts`, register/login/logout, приватний dashboard placeholder, superadmin placeholder, `login_required` redirect із `next`, helper `is_superadmin(user)`, role-aware top nav, password policy min 15 chars і базові тести.
 
 ### Завдання
 
@@ -111,6 +112,11 @@ eurovibe/
 - Дизайн-токени централізовані.
 - Немає one-off inline style для ключових кольорів.
 
+### Хід виконання
+
+- 2026-05-13: Реалізовано role-aware top nav для гостя, авторизованого користувача і superadmin. Для superadmin показується пункт `Superadmin`, якщо `accounts.roles.is_superadmin(user)` повертає `True`, і веде на захищений placeholder `/accounts/superadmin/`.
+- 2026-05-13: Додано базові стилі форм, кнопок і private panel у централізовані CSS assets.
+
 ## 4. Етап 3: Accounts, ролі та доступ
 
 ### Завдання
@@ -127,6 +133,15 @@ eurovibe/
 5. Додати helper `is_superadmin(user)`, який для v1 повертає true для username `denkuc` або для staff/superuser за явно описаним правилом.
 6. Захистити приватні маршрути `login_required`.
 7. Налаштувати redirect гостя на login із `next`.
+
+### Хід виконання
+
+- 2026-05-13: Використано стандартну Django `User` model без кастомного розширення.
+- 2026-05-13: Реалізовано `/accounts/register/`, `/accounts/login/`, `/accounts/logout/`, `/accounts/dashboard/` і `/accounts/superadmin/`.
+- 2026-05-13: Парольна політика налаштована через `MinimumLengthValidator` з `min_length=15`; composition rules не додавались.
+- 2026-05-13: У help text форм явно вказано, що password reset/заміна/нагадування пароля у v1 недоступні.
+- 2026-05-13: `logout` виконується через POST, приватний dashboard захищений `login_required`, guest redirect зберігає `next`.
+- 2026-05-13: Додано базові тести на register/login/logout, duplicate username, short password, `next` redirect і `is_superadmin(user)`.
 
 ### Критерії готовності
 

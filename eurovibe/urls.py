@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.urls import path
+from django.urls import include, path
 
 
 def home(request):
@@ -14,6 +14,7 @@ def healthz(request):
 
 urlpatterns = [
     path("", home, name="home"),
+    path("accounts/", include("accounts.urls")),
     path("healthz/", healthz, name="healthz"),
     path("admin/", admin.site.urls),
 ]

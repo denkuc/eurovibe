@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Логін · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="auth-card">
+    <p class="eyebrow">Session login</p>
+    <h1>Логін</h1>
+    <form method="post" action="{% url 'accounts:login' %}">
+      {% include "accounts/_form.html" %}
+      <button class="button-primary" type="submit">Увійти</button>
+    </form>
+  </section>
+{% endblock %}
+

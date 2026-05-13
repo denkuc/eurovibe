@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <p class="eyebrow">Private area</p>
+    <h1>Приватний dashboard</h1>
+    <p>
+      Ти увійшов як <strong>{{ request.user.username }}</strong>. Тут зʼявляться групи,
+      голосування і персональні рейтинги.
+    </p>
+    {% if is_superadmin %}
+      <p class="role-note">Superadmin-доступ активний для цього користувача.</p>
+    {% endif %}
+  </section>
+{% endblock %}
+

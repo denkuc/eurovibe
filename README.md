@@ -1,6 +1,6 @@
 # Eurovibe
 
-Eurovibe is a Django SSR web app for Eurovision-style friend voting. The current repo state is the Foundation slice: Django project bootstrap, env-based settings, static files, base layout, and health check.
+Eurovibe is a Django SSR web app for Eurovision-style friend voting. The current repo state is the Foundation slice: Django project bootstrap, env-based settings, static files, base layout, health check, and basic accounts.
 
 ## Requirements
 
@@ -61,6 +61,24 @@ Open:
 
 - App: http://127.0.0.1:8000/
 - Health check: http://127.0.0.1:8000/healthz/
+- Register: http://127.0.0.1:8000/accounts/register/
+- Login: http://127.0.0.1:8000/accounts/login/
+- Private dashboard: http://127.0.0.1:8000/accounts/dashboard/
+- Superadmin placeholder: http://127.0.0.1:8000/accounts/superadmin/
+
+If you open the dev server through `http://0.0.0.0:8000/`, include `0.0.0.0` in `DJANGO_ALLOWED_HOSTS`. The checked-in `.env.example` includes it for local development.
+
+## Accounts
+
+The app uses Django's standard `User` model and session auth.
+
+- Registration is `username + password`; email is not required in v1.
+- Passwords must be at least 15 characters.
+- Password reset is intentionally unavailable in this version, and auth forms say so.
+- Guests who open private routes are redirected to login with a `next` parameter.
+- `accounts.roles.is_superadmin(user)` returns true for username `denkuc`, staff users, or superusers.
+- The top navigation changes for guests, authenticated users, and superadmins.
+- Superadmins get a protected `/accounts/superadmin/` placeholder until the custom backoffice exists.
 
 ## Docker Setup
 
@@ -112,6 +130,12 @@ Run Django checks:
 
 ```bash
 .venv/bin/python manage.py check
+```
+
+Run tests:
+
+```bash
+.venv/bin/python manage.py test
 ```
 
 Collect static files locally:
