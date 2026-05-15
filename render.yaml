@@ -2,7 +2,7 @@ services:
   - type: web
     name: eurovibe-web
     runtime: python
-    plan: standard
+    plan: standard_flex
     buildCommand: "npm install && npm run build:css && pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
     startCommand: "gunicorn eurovibe.wsgi:application --workers 4 --worker-class sync --timeout 60"
     healthCheckPath: /healthz/
@@ -24,4 +24,6 @@ services:
 
 databases:
   - name: eurovibe-db
-    plan: standard
+    ipAllowList: []
+    instanceType: basic-1gb
+    storage: 10 GB
