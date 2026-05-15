@@ -25,5 +25,5 @@ services:
 databases:
   - name: eurovibe-db
     ipAllowList: []
-    instanceType: basic-1gb
-    storage: 10 GB
+    plan: basic-1gb
+    diskSizeGB: 10
