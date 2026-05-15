@@ -41,21 +41,23 @@
       <ul class="member-list">
         {% for membership in memberships %}
           <li class="member-row">
-            <span>
+            <span class="member-name">
               {% if membership.user_id == group.owner_id %}👑 {% endif %}{{ membership.user.username }}
             </span>
-            <span class="vote-status{% if membership.has_voted %} vote-status-done{% endif %}">
-              {% if membership.has_voted %}Проголосував{% elif membership.has_draft %}Чернетка{% else %}Ще не голосував{% endif %}
-            </span>
-            {% if membership.has_voted %}
-              <a class="button-secondary button-compact" href="{% url 'voting:group_member_ballot' group.id membership.user_id %}">Дивитись</a>
-            {% endif %}
-            {% if is_owner and membership.user_id != group.owner_id %}
-              <form method="post" action="{% url 'groups:remove_member' group.id membership.user_id %}">
-                {% csrf_token %}
-                <button class="button-danger" type="submit">Видалити</button>
-              </form>
-            {% endif %}
+            <div class="member-actions">
+              <span class="vote-status{% if membership.has_voted %} vote-status-done{% endif %}">
+                {% if membership.has_voted %}Проголосував{% elif membership.has_draft %}Чернетка{% else %}Ще не голосував{% endif %}
+              </span>
+              {% if membership.has_voted %}
+                <a class="button-secondary button-compact" href="{% url 'voting:group_member_ballot' group.id membership.user_id %}">Дивитись</a>
+              {% endif %}
+              {% if is_owner and membership.user_id != group.owner_id %}
+                <form method="post" action="{% url 'groups:remove_member' group.id membership.user_id %}">
+                  {% csrf_token %}
+                  <button class="button-danger button-compact" type="submit">Видалити</button>
+                </form>
+              {% endif %}
+            </div>
           </li>
         {% endfor %}
       </ul>
