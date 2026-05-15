@@ -2,12 +2,14 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from contest.models import ContestEdition, ContestEntry
+from contest.services import save_official_results
 from groups.services import create_group
 
-from .models import ALLOWED_POINTS, Ballot, BallotItem
-from .services import get_available_voting_modes, submit_ballot
+from .models import ALLOWED_POINTS, Ballot, BallotItem, UserScore
+from .services import calculate_user_scores, get_available_voting_modes, save_ballot_draft, submit_ballot
 
 
 class VotingDomainTests(TestCase):
@@ -69,6 +71,32 @@ class VotingDomainTests(TestCase):
         self.assertIsNotNone(ballot.submitted_at)
         self.assertEqual(ballot.items.count(), 10)
         self.assertTrue(ballot.is_complete)
+
+    def test_save_draft_allows_partial_ballot_and_submit_reuses_it(self):
+        create_group(owner=self.user, name="With", includes_ukraine=True)
+        self.open_voting()
+
+        draft = save_ballot_draft(
+            user=self.user,
+            edition=self.edition,
+            mode=Ballot.MODE_WITH_UKRAINE,
+            assignments=self.assignments()[:3],
+        )
+
+        self.assertFalse(draft.immutable)
+        self.assertIsNone(draft.submitted_at)
+        self.assertEqual(draft.items.count(), 3)
+
+        ballot = submit_ballot(
+            user=self.user,
+            edition=self.edition,
+            mode=Ballot.MODE_WITH_UKRAINE,
+            assignments=self.assignments(self.entries[4:14]),
+        )
+
+        self.assertEqual(ballot.id, draft.id)
+        self.assertTrue(ballot.immutable)
+        self.assertEqual(ballot.items.count(), 10)
 
     def test_duplicate_submit_for_same_user_mode_is_rejected(self):
         create_group(owner=self.user, name="With", includes_ukraine=True)
@@ -273,6 +301,27 @@ class VotingViewTests(TestCase):
         self.assertContains(response, "Бюлетень підтверджено")
         self.assertContains(response, "Змінити бюлетень неможливо")
 
+    def test_post_saves_draft_and_prefills_ballot(self):
+        create_group(owner=self.user, name="With", includes_ukraine=True)
+        self.open_voting()
+        self.client.force_login(self.user)
+        data = self.post_data()
+        data["action"] = "save_draft"
+        data["points_7"] = ""
+        data["points_6"] = ""
+
+        response = self.client.post(reverse("voting:index"), data)
+
+        self.assertEqual(response.status_code, 302)
+        ballot = Ballot.objects.get(user=self.user, edition=self.edition, mode=Ballot.MODE_WITH_UKRAINE)
+        self.assertFalse(ballot.immutable)
+        self.assertEqual(ballot.items.count(), 8)
+
+        response = self.client.get(reverse("voting:index"))
+
+        self.assertContains(response, "Чернетку збережено")
+        self.assertContains(response, f'value="{self.entries[0].id}"')
+
     def test_no_mode_access_renders_empty_state(self):
         self.open_voting()
         self.client.force_login(self.user)
@@ -281,3 +330,93 @@ class VotingViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Немає доступного режиму")
+
+    def test_closed_voting_renders_closed_message(self):
+        create_group(owner=self.user, name="With", includes_ukraine=True)
+        self.open_voting()
+        self.edition.close_voting()
+        self.edition.save()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("voting:index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Голосування закрите")
+        self.assertContains(response, "Бюлетені більше не приймаються")
+        self.assertNotContains(response, "Коли суперадмін відкриє голосування")
+
+
+class UserScoringTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username="olena", password="very-long-passphrase")
+        self.no_ballot_user = User.objects.create_user(username="no-ballot", password="very-long-passphrase")
+        self.edition = ContestEdition.objects.create(year=2026)
+        self.entries = [
+            ContestEntry.objects.create(
+                edition=self.edition,
+                running_order=index,
+                country_name=f"Country {index}",
+                country_code="FR",
+                artist_name=f"Artist {index}",
+                song_title=f"Song {index}",
+            )
+            for index in range(1, 25)
+        ]
+        self.ukraine = ContestEntry.objects.create(
+            edition=self.edition,
+            running_order=25,
+            country_name="Ukraine",
+            country_code="UA",
+            artist_name="Northern Heart",
+            song_title="Ridne Svitlo",
+            is_ukraine=True,
+        )
+
+    def close_voting(self):
+        self.edition.open_voting()
+        self.edition.close_voting()
+        self.edition.save()
+
+    def create_ballot(self, *, user, mode, entries):
+        ballot = Ballot.objects.create(
+            edition=self.edition,
+            user=user,
+            mode=mode,
+            immutable=True,
+            submitted_at=timezone.now(),
+        )
+        for points, entry in zip([12, 10, 8, 7, 6, 5, 4, 3, 2, 1], entries):
+            BallotItem.objects.create(ballot=ballot, points=points, contest_entry=entry)
+        return ballot
+
+    def official_rankings(self, ordered_entries):
+        return [(rank, entry.id) for rank, entry in enumerate(ordered_entries, start=1)]
+
+    def test_without_ukraine_scoring_normalizes_official_order(self):
+        self.create_ballot(user=self.user, mode=Ballot.MODE_WITHOUT_UKRAINE, entries=self.entries[:10])
+        self.close_voting()
+        save_official_results(edition=self.edition, rankings=self.official_rankings([self.ukraine] + self.entries))
+
+        count = calculate_user_scores(edition=self.edition)
+
+        score = UserScore.objects.get(edition=self.edition, user=self.user, mode=Ballot.MODE_WITHOUT_UKRAINE)
+        self.assertEqual(count, 1)
+        self.assertEqual(score.exact_hits, 10)
+        self.assertEqual(score.top10_hits_wrong_place, 0)
+        self.assertEqual(score.total_score, 20)
+        self.assertFalse(UserScore.objects.filter(user=self.no_ballot_user).exists())
+
+    def test_scoring_recalculation_is_idempotent_after_official_results_correction(self):
+        self.create_ballot(user=self.user, mode=Ballot.MODE_WITH_UKRAINE, entries=self.entries[:10])
+        self.close_voting()
+        save_official_results(edition=self.edition, rankings=self.official_rankings(self.entries + [self.ukraine]))
+        calculate_user_scores(edition=self.edition)
+        first_score_id = UserScore.objects.get(edition=self.edition, user=self.user).id
+
+        save_official_results(edition=self.edition, rankings=self.official_rankings(list(reversed(self.entries)) + [self.ukraine]))
+        self.assertFalse(UserScore.objects.filter(id=first_score_id).exists())
+        calculate_user_scores(edition=self.edition)
+        calculate_user_scores(edition=self.edition)
+
+        self.assertEqual(UserScore.objects.filter(edition=self.edition, user=self.user).count(), 1)

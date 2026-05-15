@@ -20,13 +20,26 @@
     <section class="finalist-list" aria-label="Список фіналістів">
       {% for entry in entries %}
         <article class="finalist-row{% if entry.is_ukraine %} finalist-row-ukraine{% endif %}">
-          <div class="running-order">{{ entry.running_order }}</div>
+          <div class="running-order">{% if entry.official_result %}{{ entry.official_result.final_rank }}{% else %}{{ entry.running_order }}{% endif %}</div>
           <div>
             <h2><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }}</h2>
             <p>{{ entry.artist_name }} · {{ entry.song_title }}</p>
           </div>
-          {% if entry.is_ukraine %}
-            <span class="state-pill state-pill-gold">Україна</span>
+          {% if entry.official_result %}
+            <dl class="result-points">
+              <div>
+                <dt>Журі</dt>
+                <dd>{{ entry.official_result.jury_points }}</dd>
+              </div>
+              <div>
+                <dt>Глядачі</dt>
+                <dd>{{ entry.official_result.televote_points }}</dd>
+              </div>
+              <div>
+                <dt>Всього</dt>
+                <dd>{{ entry.official_result.total_points }}</dd>
+              </div>
+            </dl>
           {% endif %}
         </article>
       {% endfor %}

@@ -41,7 +41,18 @@ def submit_ballot(*, user, edition, mode, assignments):
 
     try:
         with transaction.atomic():
-            ballot = Ballot.objects.create(edition=edition, user=user, mode=mode, immutable=True)
+            ballot, _created = Ballot.objects.select_for_update().get_or_create(
+                edition=edition,
+                user=user,
+                mode=mode,
+                defaults={"immutable": False},
+            )
+            if ballot.is_submitted:
+                raise ValidationError("Ballot for this mode already exists.")
+            ballot.items.all().delete()
+            ballot.immutable = True
+            ballot.submitted_at = timezone.now()
+            ballot.save(update_fields=["immutable", "submitted_at"])
             items = [
                 BallotItem(ballot=ballot, points=points, contest_entry_id=entry_id)
                 for points, entry_id in normalized
@@ -52,6 +63,36 @@ def submit_ballot(*, user, edition, mode, assignments):
             return ballot
     except IntegrityError as exc:
         raise ValidationError("Ballot could not be submitted. It may already exist or contain duplicates.") from exc
+
+
+def save_ballot_draft(*, user, edition, mode, assignments):
+    normalized = _normalize_assignments(assignments)
+    _validate_draft(user=user, edition=edition, mode=mode, normalized=normalized)
+
+    try:
+        with transaction.atomic():
+            ballot, _created = Ballot.objects.select_for_update().get_or_create(
+                edition=edition,
+                user=user,
+                mode=mode,
+                defaults={"immutable": False},
+            )
+            if ballot.is_submitted:
+                raise ValidationError("Confirmed ballots cannot be edited.")
+            ballot.items.all().delete()
+            ballot.immutable = False
+            ballot.submitted_at = None
+            ballot.save(update_fields=["immutable", "submitted_at"])
+            items = [
+                BallotItem(ballot=ballot, points=points, contest_entry_id=entry_id)
+                for points, entry_id in normalized
+            ]
+            for item in items:
+                item.full_clean()
+            BallotItem.objects.bulk_create(items)
+            return ballot
+    except IntegrityError as exc:
+        raise ValidationError("Draft could not be saved. It may contain duplicates.") from exc
 
 
 @transaction.atomic
@@ -68,7 +109,7 @@ def calculate_user_scores(*, edition):
     calculated_at = timezone.now()
     count = 0
 
-    for ballot in Ballot.objects.filter(edition=edition).prefetch_related("items"):
+    for ballot in Ballot.objects.filter(edition=edition, immutable=True, submitted_at__isnull=False).prefetch_related("items"):
         official_top = official_by_mode[ballot.mode]
         exact_hits = 0
         wrong_place_hits = 0
@@ -141,7 +182,7 @@ def _validate_submission(*, user, edition, mode, normalized):
         raise ValidationError("Unknown voting mode.")
     if mode not in get_available_voting_modes(user, edition):
         raise ValidationError("User does not have access to this voting mode.")
-    if Ballot.objects.filter(edition=edition, user=user, mode=mode).exists():
+    if Ballot.objects.filter(edition=edition, user=user, mode=mode, immutable=True, submitted_at__isnull=False).exists():
         raise ValidationError("Ballot for this mode already exists.")
     if len(normalized) != REQUIRED_BALLOT_ITEMS:
         raise ValidationError(f"Ballot must contain exactly {REQUIRED_BALLOT_ITEMS} items.")
@@ -162,6 +203,38 @@ def _validate_submission(*, user, edition, mode, normalized):
         raise ValidationError("Every ballot entry must exist.")
     if any(entry.edition_id != edition.id for entry in entries.values()):
         raise ValidationError("Every ballot entry must belong to the current edition.")
+    if mode == Ballot.MODE_WITHOUT_UKRAINE and any(entry.is_ukraine for entry in entries.values()):
+        raise ValidationError("Ukraine cannot receive points in without_ukraine mode.")
+
+
+def _validate_draft(*, user, edition, mode, normalized):
+    if not user or not user.is_authenticated:
+        raise ValidationError("Authentication is required to save a draft.")
+    if edition is None or not edition.can_vote:
+        raise ValidationError("Voting is not open for this edition.")
+    if mode not in {Ballot.MODE_WITH_UKRAINE, Ballot.MODE_WITHOUT_UKRAINE}:
+        raise ValidationError("Unknown voting mode.")
+    if mode not in get_available_voting_modes(user, edition):
+        raise ValidationError("User does not have access to this voting mode.")
+
+    points = [point for point, _entry_id in normalized]
+    entry_ids = [entry_id for _point, entry_id in normalized]
+
+    if any(point not in ALLOWED_POINTS for point in points) or len(points) != len(set(points)):
+        raise ValidationError("Draft cannot contain duplicate or unsupported points.")
+    if len(entry_ids) != len(set(entry_ids)):
+        raise ValidationError("Draft cannot contain duplicate entries.")
+    if not entry_ids:
+        return
+
+    entries = {
+        entry.id: entry
+        for entry in ContestEntry.objects.filter(id__in=entry_ids).only("id", "edition_id", "is_ukraine")
+    }
+    if len(entries) != len(entry_ids):
+        raise ValidationError("Every draft entry must exist.")
+    if any(entry.edition_id != edition.id for entry in entries.values()):
+        raise ValidationError("Every draft entry must belong to the current edition.")
     if mode == Ballot.MODE_WITHOUT_UKRAINE and any(entry.is_ukraine for entry in entries.values()):
         raise ValidationError("Ukraine cannot receive points in without_ukraine mode.")
 

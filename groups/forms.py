@@ -20,12 +20,16 @@ class FriendGroupCreateForm(forms.ModelForm):
         }
 
 
-class GroupModeForm(forms.ModelForm):
+class GroupSettingsForm(forms.ModelForm):
     class Meta:
         model = FriendGroup
-        fields = ["includes_ukraine"]
+        fields = ["name", "includes_ukraine"]
         labels = {
+            "name": "Назва групи",
             "includes_ukraine": "Голосуємо з Україною",
+        }
+        help_texts = {
+            "name": "Можна залишити порожнім — назва створиться автоматично.",
         }
 
 

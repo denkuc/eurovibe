@@ -23,8 +23,8 @@ class Ballot(models.Model):
     edition = models.ForeignKey(ContestEdition, related_name="ballots", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="ballots", on_delete=models.CASCADE)
     mode = models.CharField(max_length=32, choices=MODE_CHOICES)
-    submitted_at = models.DateTimeField(default=timezone.now)
-    immutable = models.BooleanField(default=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    immutable = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -39,6 +39,10 @@ class Ballot(models.Model):
     @property
     def is_complete(self):
         return self.items.count() == REQUIRED_BALLOT_ITEMS
+
+    @property
+    def is_submitted(self):
+        return self.immutable and self.submitted_at is not None
 
     def clean(self):
         super().clean()

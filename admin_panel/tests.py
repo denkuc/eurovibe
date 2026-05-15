@@ -2,8 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from contest.models import ContestEdition, OfficialResult
-from contest.seed_data import DEV_FINALISTS
+from contest.models import ContestEdition, ContestEntry, OfficialResult
 from groups.services import create_group
 from voting.models import Ballot, UserScore
 from voting.services import submit_ballot
@@ -29,22 +28,15 @@ class AdminPanelTests(TestCase):
         response = self.client.get(reverse("admin_panel:dashboard"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Backoffice")
+        self.assertNotContains(response, "admin-entry-list")
 
-    def test_import_finalists_and_open_voting_write_audit_log(self):
+    def test_open_voting_write_audit_log(self):
         self.client.force_login(self.admin)
-        self.client.post(reverse("admin_panel:dashboard"), {"action": "create_edition", "year": "2026"})
-
-        response = self.client.post(
-            reverse("admin_panel:dashboard"),
-            {"action": "import_finalists", "finalists_csv": _finalists_csv()},
-            follow=True,
-        )
-
+        response = self.client.post(reverse("admin_panel:dashboard"), {"action": "create_edition", "year": "2026"}, follow=True)
         edition = ContestEdition.objects.get(year=2026)
-        self.assertContains(response, "Імпортовано фіналістів: 25")
-        self.assertEqual(edition.entries.count(), 25)
-        self.assertTrue(AdminAuditLog.objects.filter(action="import_finalists").exists())
 
+        self.assertContains(response, "Фіналістів синхронізовано: 25")
+        self.assertEqual(edition.entries.count(), 25)
         self.client.post(reverse("admin_panel:dashboard"), {"action": "open_voting"})
         edition.refresh_from_db()
         self.assertEqual(edition.state, ContestEdition.STATE_VOTING_OPEN)
@@ -62,10 +54,10 @@ class AdminPanelTests(TestCase):
     def test_official_results_scoring_and_publish_flow(self):
         self.client.force_login(self.admin)
         self.client.post(reverse("admin_panel:dashboard"), {"action": "create_edition", "year": "2026"})
-        self.client.post(reverse("admin_panel:dashboard"), {"action": "import_finalists", "finalists_csv": _finalists_csv()})
+        edition = ContestEdition.objects.get(year=2026)
         self.client.post(reverse("admin_panel:dashboard"), {"action": "open_voting"})
 
-        edition = ContestEdition.objects.get(year=2026)
+        edition.refresh_from_db()
         create_group(owner=self.user, name="With", includes_ukraine=True)
         exact_points = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1]
         submit_ballot(
@@ -90,6 +82,10 @@ class AdminPanelTests(TestCase):
         edition.refresh_from_db()
         self.assertEqual(edition.state, ContestEdition.STATE_OFFICIAL_RESULTS_ENTERED)
         self.assertEqual(OfficialResult.objects.filter(edition=edition).count(), 25)
+        first_result = OfficialResult.objects.get(edition=edition, final_rank=1)
+        self.assertEqual(first_result.jury_points, 101)
+        self.assertEqual(first_result.televote_points, 201)
+        self.assertEqual(first_result.total_points, 302)
 
         self.client.post(reverse("admin_panel:dashboard"), {"action": "calculate_scores"})
         score = UserScore.objects.get(edition=edition, user=self.user, mode=Ballot.MODE_WITH_UKRAINE)
@@ -101,28 +97,31 @@ class AdminPanelTests(TestCase):
         self.assertEqual(edition.state, ContestEdition.STATE_SCORES_PUBLISHED)
 
 
-def _finalists_csv():
-    lines = ["running_order,country_code,country_name,artist_name,song_title,is_ukraine"]
-    for row in DEV_FINALISTS:
-        lines.append(
-            ",".join(
-                [
-                    str(row["running_order"]),
-                    row["country_code"],
-                    _csv_cell(row["country_name"]),
-                    _csv_cell(row["artist_name"]),
-                    _csv_cell(row["song_title"]),
-                    "true" if row.get("is_ukraine") else "",
-                ]
-            )
+def _create_finalists(edition):
+    for index in range(1, 25):
+        ContestEntry.objects.create(
+            edition=edition,
+            running_order=index,
+            country_name=f"Country {index}",
+            country_code="FR",
+            artist_name=f"Artist {index}",
+            song_title=f"Song {index}",
         )
-    return "\n".join(lines)
+    ContestEntry.objects.create(
+        edition=edition,
+        running_order=25,
+        country_name="Ukraine",
+        country_code="UA",
+        artist_name="Northern Heart",
+        song_title="Ridne Svitlo",
+        is_ukraine=True,
+    )
 
 
 def _official_results_csv(edition):
-    lines = ["final_rank,entry_id,country_name"]
+    lines = ["final_rank,entry_id,country_name,jury_points,televote_points,total_points"]
     for rank, entry in enumerate(edition.entries.order_by("running_order"), start=1):
-        lines.append(f"{rank},{entry.id},{_csv_cell(entry.country_name)}")
+        lines.append(f"{rank},{entry.id},{_csv_cell(entry.country_name)},{100 + rank},{200 + rank},{300 + rank * 2}")
     return "\n".join(lines)
 
 

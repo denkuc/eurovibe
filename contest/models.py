@@ -121,6 +121,9 @@ class OfficialResult(models.Model):
     edition = models.ForeignKey(ContestEdition, related_name="official_results", on_delete=models.CASCADE)
     final_rank = models.PositiveSmallIntegerField()
     contest_entry = models.ForeignKey(ContestEntry, related_name="official_results", on_delete=models.CASCADE)
+    jury_points = models.PositiveSmallIntegerField(default=0)
+    televote_points = models.PositiveSmallIntegerField(default=0)
+    total_points = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -10,15 +10,15 @@ from django.urls import reverse
 from contest.services import get_current_edition
 from voting.models import Ballot
 
-from .forms import FriendGroupCreateForm, GroupModeForm, JoinByCodeForm
+from .forms import FriendGroupCreateForm, GroupSettingsForm, JoinByCodeForm
 from .models import FriendGroup
 from .services import (
     create_group,
     get_member_group_or_404,
     join_group,
     remove_member as remove_member_service,
-    update_group_mode,
-    user_can_edit_group_mode,
+    group_has_submitted_ballots,
+    update_group_settings,
 )
 
 
@@ -57,19 +57,35 @@ def group_detail(request, group_id):
     memberships = list(group.memberships.select_related("user"))
     edition = get_current_edition()
     voted_user_ids = set()
+    draft_user_ids = set()
     if edition:
         mode = Ballot.MODE_WITH_UKRAINE if group.includes_ukraine else Ballot.MODE_WITHOUT_UKRAINE
+        member_user_ids = [membership.user_id for membership in memberships]
         voted_user_ids = set(
             Ballot.objects.filter(
                 edition=edition,
                 mode=mode,
-                user_id__in=[membership.user_id for membership in memberships],
+                user_id__in=member_user_ids,
+                immutable=True,
+                submitted_at__isnull=False,
+            ).values_list("user_id", flat=True),
+        )
+        draft_user_ids = set(
+            Ballot.objects.filter(
+                edition=edition,
+                mode=mode,
+                user_id__in=member_user_ids,
+                immutable=False,
             ).values_list("user_id", flat=True),
         )
     for membership in memberships:
         membership.has_voted = membership.user_id in voted_user_ids
+        membership.has_draft = membership.user_id in draft_user_ids
 
-    mode_form = GroupModeForm(instance=group)
+    settings_form = GroupSettingsForm(instance=group)
+    can_edit_mode = not group_has_submitted_ballots(group)
+    if not can_edit_mode:
+        settings_form.fields["includes_ukraine"].disabled = True
     return render(
         request,
         "groups/detail.html",
@@ -77,9 +93,9 @@ def group_detail(request, group_id):
             "group": group,
             "memberships": memberships,
             "invite_url": invite_url,
-            "mode_form": mode_form,
+            "settings_form": settings_form,
             "is_owner": group.owner_id == request.user.id,
-            "can_edit_mode": user_can_edit_group_mode(),
+            "can_edit_mode": can_edit_mode,
         },
     )
 
@@ -136,21 +152,27 @@ def rotate_invite(request, group_id):
 
 
 @login_required
-def update_mode(request, group_id):
+def update_settings(request, group_id):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
     group = get_member_group_or_404(group_id=group_id, user=request.user)
-    form = GroupModeForm(request.POST, instance=group)
+    form = GroupSettingsForm(request.POST, instance=group)
+    if group_has_submitted_ballots(group):
+        form.fields["includes_ukraine"].disabled = True
     if form.is_valid():
         try:
-            update_group_mode(
+            update_group_settings(
                 group=group,
                 owner=request.user,
+                name=form.cleaned_data["name"],
                 includes_ukraine=form.cleaned_data["includes_ukraine"],
             )
-            messages.success(request, "Режим групи оновлено.")
+            messages.success(request, "Налаштування групи оновлено.")
         except PermissionDenied as exc:
             return HttpResponseForbidden(str(exc))
         except ValidationError as exc:
             messages.error(request, exc.message)
     return redirect("groups:detail", group_id=group.id)
+
+
+update_mode = update_settings

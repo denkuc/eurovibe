@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from contest.models import ContestEdition, ContestEntry
 from voting.models import Ballot
@@ -84,14 +85,27 @@ class GroupViewsTests(TestCase):
         group = create_group(owner=self.user, name="Owned", includes_ukraine=False)
         GroupMembership.objects.create(group=group, user=self.other)
         edition = ContestEdition.objects.create(year=2026)
-        Ballot.objects.create(edition=edition, user=self.user, mode=Ballot.MODE_WITH_UKRAINE)
-        Ballot.objects.create(edition=edition, user=self.other, mode=Ballot.MODE_WITHOUT_UKRAINE)
+        Ballot.objects.create(
+            edition=edition,
+            user=self.user,
+            mode=Ballot.MODE_WITH_UKRAINE,
+            immutable=True,
+            submitted_at=timezone.now(),
+        )
+        Ballot.objects.create(
+            edition=edition,
+            user=self.other,
+            mode=Ballot.MODE_WITHOUT_UKRAINE,
+            immutable=True,
+            submitted_at=timezone.now(),
+        )
 
         response = self.client.get(reverse("groups:detail", args=[group.id]))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Ще не голосував")
         self.assertContains(response, "Проголосував")
+        self.assertContains(response, reverse("voting:group_member_ballot", args=[group.id, self.other.id]))
 
     def test_join_by_code_is_case_insensitive_and_does_not_duplicate(self):
         group = create_group(owner=self.other, name="Joinable", includes_ukraine=False)
@@ -169,13 +183,14 @@ class GroupViewsTests(TestCase):
         self.assertNotEqual(group.join_code, old_code)
         self.assertNotEqual(group.invite_token, old_token)
 
-    def test_owner_can_change_mode_only_in_setup(self):
+    def test_owner_can_update_name_and_mode_before_group_has_submitted_ballots(self):
         group = create_group(owner=self.user, name="Owned", includes_ukraine=True)
 
-        response = self.client.post(reverse("groups:update_mode", args=[group.id]), {"includes_ukraine": ""})
+        response = self.client.post(reverse("groups:update_settings", args=[group.id]), {"name": "New Name", "includes_ukraine": ""})
         group.refresh_from_db()
 
         self.assertRedirects(response, reverse("groups:detail", args=[group.id]))
+        self.assertEqual(group.name, "New Name")
         self.assertFalse(group.includes_ukraine)
 
         edition = ContestEdition.objects.create(year=2026)
@@ -191,11 +206,39 @@ class GroupViewsTests(TestCase):
         edition.open_voting()
         edition.save()
 
-        response = self.client.post(reverse("groups:update_mode", args=[group.id]), {"includes_ukraine": "on"})
+        response = self.client.post(reverse("groups:update_settings", args=[group.id]), {"name": "Still Editable", "includes_ukraine": "on"})
         group.refresh_from_db()
 
         self.assertRedirects(response, reverse("groups:detail", args=[group.id]))
-        self.assertFalse(group.includes_ukraine)
+        self.assertEqual(group.name, "Still Editable")
+        self.assertTrue(group.includes_ukraine)
+
+    def test_owner_cannot_change_mode_after_group_has_submitted_ballot(self):
+        group = create_group(owner=self.user, name="Owned", includes_ukraine=True)
+        edition = ContestEdition.objects.create(year=2026)
+        Ballot.objects.create(
+            edition=edition,
+            user=self.user,
+            mode=Ballot.MODE_WITH_UKRAINE,
+            immutable=True,
+            submitted_at=timezone.now(),
+        )
+
+        response = self.client.post(reverse("groups:update_settings", args=[group.id]), {"name": "Renamed", "includes_ukraine": ""})
+        group.refresh_from_db()
+
+        self.assertRedirects(response, reverse("groups:detail", args=[group.id]))
+        self.assertEqual(group.name, "Renamed")
+        self.assertTrue(group.includes_ukraine)
+
+    def test_group_detail_uses_settings_dialog_instead_of_mode_panel(self):
+        group = create_group(owner=self.user, name="Owned", includes_ukraine=True)
+
+        response = self.client.get(reverse("groups:detail", args=[group.id]))
+
+        self.assertContains(response, "group-settings-dialog")
+        self.assertContains(response, "Налаштування групи")
+        self.assertNotContains(response, '<h2 class="section-title">Режим</h2>', html=True)
 
     def test_model_blocks_duplicate_membership(self):
         group = create_group(owner=self.user, name="Owned", includes_ukraine=True)

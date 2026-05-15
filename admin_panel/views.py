@@ -9,13 +9,13 @@ from contest.models import ContestEdition
 from contest.services import (
     get_current_edition,
     parse_official_results_csv,
-    replace_finalists_from_csv,
     save_official_results,
+    seed_finalists,
 )
 from voting.models import Ballot, UserScore
 from voting.services import calculate_user_scores, publish_user_scores
 
-from .forms import EditionForm, FinalistImportForm, OfficialResultsForm, create_edition
+from .forms import EditionForm, OfficialResultsForm, create_edition
 from .models import AdminAuditLog
 
 
@@ -34,15 +34,15 @@ def dashboard(request):
                 form = EditionForm(request.POST)
                 if form.is_valid():
                     edition = create_edition(form.cleaned_data["year"])
-                    _audit(request, "create_edition", {"edition_id": edition.id, "year": edition.year})
-                    messages.success(request, f"Edition {edition.year} готовий.")
+                    finalists_count = seed_finalists(edition=edition)
+                    _audit(
+                        request,
+                        "create_edition",
+                        {"edition_id": edition.id, "year": edition.year, "finalists_count": finalists_count},
+                    )
+                    messages.success(request, f"Edition {edition.year} готовий. Фіналістів синхронізовано: {finalists_count}.")
                 else:
                     _form_errors(request, form)
-            elif action == "import_finalists":
-                edition = _require_edition(edition)
-                count = replace_finalists_from_csv(edition=edition, text=request.POST.get("finalists_csv", ""))
-                _audit(request, "import_finalists", {"edition_id": edition.id, "count": count})
-                messages.success(request, f"Імпортовано фіналістів: {count}.")
             elif action == "open_voting":
                 edition = _require_edition(edition)
                 edition.open_voting()
@@ -59,7 +59,16 @@ def dashboard(request):
                 edition = _require_edition(edition)
                 rankings = parse_official_results_csv(edition=edition, text=request.POST.get("results_csv", ""))
                 entries = {entry.id: entry for entry in edition.entries.all()}
-                official_preview = [(rank, entries[entry_id]) for rank, entry_id in sorted(rankings)]
+                official_preview = [
+                    {
+                        "rank": result["final_rank"],
+                        "entry": entries[result["entry_id"]],
+                        "jury_points": result["jury_points"],
+                        "televote_points": result["televote_points"],
+                        "total_points": result["total_points"],
+                    }
+                    for result in sorted(rankings, key=lambda item: item["final_rank"])
+                ]
                 messages.success(request, "Офіційний порядок валідний. Перевір preview і збережи.")
             elif action == "save_official_results":
                 edition = _require_edition(edition)
@@ -89,11 +98,10 @@ def dashboard(request):
     edition = get_current_edition()
     context = {
         "audit_logs": AdminAuditLog.objects.select_related("actor")[:12],
-        "ballot_count": Ballot.objects.filter(edition=edition).count() if edition else 0,
+        "ballot_count": Ballot.objects.filter(edition=edition, immutable=True, submitted_at__isnull=False).count() if edition else 0,
         "edition": edition,
         "edition_form": EditionForm(),
         "entries": edition.entries.order_by("running_order") if edition else [],
-        "finalist_form": FinalistImportForm(),
         "official_form": OfficialResultsForm(edition=edition),
         "official_preview": official_preview,
         "score_count": UserScore.objects.filter(edition=edition).count() if edition else 0,

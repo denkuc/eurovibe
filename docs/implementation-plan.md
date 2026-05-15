@@ -197,7 +197,7 @@ ContestEntry:
 
 ### Критерії готовності
 
-- Dev seed створює edition 2026 і 25 entries.
+- Dev seed створює edition 2026 і актуальних фіналістів.
 - Повторний запуск seed не дублює entries або має явний idempotent/update режим.
 - Голосування неможливо відкрити без фіналістів.
 - Після переходу з `setup` фіналісти не редагуються через процесні сторінки.
@@ -206,7 +206,8 @@ ContestEntry:
 
 - 2026-05-13: Додано app `contest` із моделями `ContestEdition` і `ContestEntry`, state constants/helper-и, унікальні constraints для року, running order і єдиної України в edition.
 - 2026-05-13: Додано доменні transition methods `open_voting()`/`close_voting()`; `open_voting()` відхиляє відкриття без фіналістів, а entries валідатор блокує редагування після `setup`.
-- 2026-05-13: Додано idempotent management command `seed_dev_contest`, який створює edition 2026 і 25 dev finalist entries із PRD.
+- 2026-05-13: Додано idempotent management command `seed_dev_contest`, який створює edition 2026 і seeded finalist entries.
+- 2026-05-15: Seed finalist entries оновлено до поточного official Grand Final running order; після recreating локальної бази `seed_dev_contest` відновлює фіналістів.
 - 2026-05-13: Додано read-only сторінку `/contest/finalists/` і покриття тестами для seed, constraints, state helper-ів і сторінки списку.
 
 ## 6. Етап 5: Групи друзів
@@ -556,6 +557,12 @@ For `without_ukraine`:
 - Users без ballot не отримують score або отримують явно нульовий score за узгодженим правилом. Рекомендація: не включати users без ballot у leaderboard.
 - Повторний запуск scoring не дублює `UserScore`.
 - User leaderboard недоступний до `scores_published`.
+
+### Хід виконання
+
+- 2026-05-13: Додано global і group user leaderboard після `scores_published`, mode-aware фільтрацію, сортування за `total_score`, `exact_hits`, `top10_hits_wrong_place`, `username`.
+- 2026-05-13: Дозволено виправляти official results до publication; при заміні official order очищаються попередні `UserScore`, щоб вимагати свіжий перерахунок.
+- 2026-05-13: Додано тести для `without_ukraine` normalization, відсутності users без ballot у score, idempotent recalculation, member-only group user leaderboard і 404 до publication.
 
 ## 12. Етап 11: Security hardening
 

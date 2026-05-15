@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Рейтинг користувачів · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <nav class="leaderboard-type-tabs" aria-label="Тип рейтингу">
+    <a href="{% url 'leaderboards:global_countries' %}">Країни</a>
+    <a class="active" href="{% url 'leaderboards:global_users' %}" aria-current="page">Користувачі</a>
+  </nav>
+
+  <section class="panel panel-wide leaderboard-hero">
+    <p class="eyebrow">Рейтинг користувачів</p>
+    <h1>{{ scope_label }}</h1>
+    <div class="meta-row">
+      <span class="state-pill">Edition {{ edition.year }}</span>
+      <span class="state-pill">{{ mode_label }}</span>
+    </div>
+  </section>
+
+  <section class="leaderboard-nav" aria-label="Розділи рейтингів">
+    <div class="leaderboard-nav-group">
+      <nav class="leaderboard-tabs" aria-label="Рейтинги користувачів">
+        {% if mode == "with_ukraine" and scope == "global_users" %}
+          <a class="active" href="{% url 'leaderboards:global_users_by_mode' 'with_ukraine' %}" aria-current="page">Глобально з Україною</a>
+          <a href="{% url 'leaderboards:global_users_by_mode' 'without_ukraine' %}">Глобально без України</a>
+        {% elif mode == "without_ukraine" and scope == "global_users" %}
+          <a href="{% url 'leaderboards:global_users_by_mode' 'with_ukraine' %}">Глобально з Україною</a>
+          <a class="active" href="{% url 'leaderboards:global_users_by_mode' 'without_ukraine' %}" aria-current="page">Глобально без України</a>
+        {% else %}
+          <a href="{% url 'leaderboards:global_users_by_mode' 'with_ukraine' %}">Глобально з Україною</a>
+          <a href="{% url 'leaderboards:global_users_by_mode' 'without_ukraine' %}">Глобально без України</a>
+        {% endif %}
+        {% for tab in leaderboard_tabs %}
+          {% if tab.scope == "group" %}
+            <a class="{% if group and group.id == tab.group.id %}active{% endif %}" href="{% url 'leaderboards:group_users' tab.group.id %}" {% if group and group.id == tab.group.id %}aria-current="page"{% endif %}>{{ tab.label }}</a>
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </section>
+
+  {% if rows %}
+    <section class="leaderboard-list" aria-label="Рейтинг користувачів">
+      {% for row in rows %}
+        <article class="leaderboard-row user-leaderboard-row">
+          <div class="leaderboard-rank">{{ forloop.counter }}</div>
+          <div class="leaderboard-country">
+            <h2>{{ row.username }}</h2>
+            <p>{{ mode_label }}</p>
+          </div>
+          <div class="leaderboard-score">
+            <strong>{{ row.total_score }}</strong>
+            <span>score</span>
+          </div>
+          <dl class="leaderboard-breakdown">
+            <div>
+              <dt>Exact</dt>
+              <dd>{{ row.exact_hits }}</dd>
+            </div>
+            <div>
+              <dt>Top 10</dt>
+              <dd>{{ row.top10_hits_wrong_place }}</dd>
+            </div>
+          </dl>
+        </article>
+      {% endfor %}
+    </section>
+  {% else %}
+    <section class="panel">
+      <h2 class="section-title">Ще немає score</h2>
+      <p>У цьому режимі немає користувачів із порахованими бюлетенями.</p>
+    </section>
+  {% endif %}
+{% endblock %}

@@ -13,5 +13,6 @@ urlpatterns = [
     path("<int:group_id>/", views.group_detail, name="detail"),
     path("<int:group_id>/remove-member/<int:user_id>/", views.remove_member, name="remove_member"),
     path("<int:group_id>/rotate-invite/", views.rotate_invite, name="rotate_invite"),
+    path("<int:group_id>/settings/", views.update_settings, name="update_settings"),
     path("<int:group_id>/mode/", views.update_mode, name="update_mode"),
 ]

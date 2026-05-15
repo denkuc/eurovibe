@@ -10,7 +10,7 @@
     {% if edition %}
       <p>Edition {{ edition.year }} · <span class="state-pill">{{ edition.get_state_display }}</span> · фіналістів {{ entries|length }} · бюлетенів {{ ballot_count }} · score {{ score_count }}</p>
     {% else %}
-      <p>Поточний edition ще не створено. Почни з creation або seed CSV.</p>
+      <p>Поточний edition ще не створено. Почни зі створення edition.</p>
     {% endif %}
   </section>
 
@@ -40,45 +40,12 @@
         </form>
       </div>
     </section>
-
-    <section class="panel admin-panel">
-      <p class="eyebrow">Finalists</p>
-      <h2>Імпорт фіналістів</h2>
-      <p>CSV header: running_order,country_code,country_name,artist_name,song_title,is_ukraine</p>
-      <form class="stacked-form" method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="import_finalists">
-        <label class="form-field">
-          <span>{{ finalist_form.finalists_csv.label }}</span>
-          {{ finalist_form.finalists_csv }}
-        </label>
-        <button class="button-primary" type="submit" {% if not edition or edition.state != "setup" %}disabled{% endif %}>Замінити список фіналістів</button>
-      </form>
-    </section>
   </div>
-
-  {% if edition %}
-    <section class="panel panel-wide admin-list-panel">
-      <p class="eyebrow">Entries</p>
-      <h2>Фіналісти</h2>
-      <div class="admin-entry-list">
-        {% for entry in entries %}
-          <div class="admin-entry-row">
-            <span class="running-order">{{ entry.running_order }}</span>
-            <strong><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }}</strong>
-            <span>{{ entry.artist_name }} · {{ entry.song_title }}</span>
-          </div>
-        {% empty %}
-          <p class="help-text">Список порожній.</p>
-        {% endfor %}
-      </div>
-    </section>
-  {% endif %}
 
   <section class="panel panel-wide admin-list-panel">
     <p class="eyebrow">Official results</p>
     <h2>Повний офіційний порядок</h2>
-    <p>CSV header: final_rank,entry_id,country_name. Для збереження потрібні всі фіналісти рівно один раз.</p>
+    <p>CSV header: final_rank,entry_id,country_name,jury_points,televote_points,total_points. Для збереження потрібні всі фіналісти рівно один раз.</p>
     <form class="stacked-form" method="post">
       {% csrf_token %}
       <label class="form-field">
@@ -92,11 +59,11 @@
     </form>
     {% if official_preview %}
       <div class="admin-entry-list official-preview">
-        {% for rank, entry in official_preview %}
+        {% for result in official_preview %}
           <div class="admin-entry-row">
-            <span class="running-order">{{ rank }}</span>
-            <strong>{{ entry.country_name }}</strong>
-            <span>{{ entry.artist_name }} · {{ entry.song_title }}</span>
+            <span class="running-order">{{ result.rank }}</span>
+            <strong>{{ result.entry.country_name }}</strong>
+            <span>{{ result.entry.artist_name }} · {{ result.entry.song_title }} · jury {{ result.jury_points }} · televote {{ result.televote_points }} · total {{ result.total_points }}</span>
           </div>
         {% endfor %}
       </div>

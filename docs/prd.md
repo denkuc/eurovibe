@@ -68,37 +68,7 @@ v1 має бути свідомо обмеженим. У нього входят
 
 Формула підрахунку балів користувача має бути жорстко зафіксована. Оцінка 12 означає прогноз 1 місця, 10 — прогноз 2 місця, 8 — прогноз 3 місця, далі 7→4, 6→5, 5→6, 4→7, 3→8, 2→9, 1→10. Якщо користувач поставив країну рівно на те місце, яке вона реально посіла, він отримує **2 бали**. Якщо поставив країну в свій top 10, і ця країна теж потрапила в офіційний top 10, але на іншому місці, він отримує **1 бал**. Інакше — 0. Для режиму `without_ukraine` офіційний результат нормалізується: Україна прибирається з фінального порядку, всі країни нижче зсуваються на одну позицію вгору, і вже з цього списку береться top 10. Офіційна логіка point buckets Eurovision для основної гри тут залишається тією ж самою — `1–8, 10, 12`. citeturn6view0turn7view0
 
-Нижче — **готовий development seed** для агентської імплементації. Я свідомо зробив **24 африканські країни + Україна**, бо інакше неможливо протестувати спеціальну бізнес-логіку “з/без України”. Імена виконавців і пісень тут **вигадані**, це лише placeholder-дані для dev/staging.
-
-```yaml
-edition: 2026-dev-seed
-finalists:
-  - { running_order: 1,  country: "Algeria",       artist: "Sahara Bloom",     song: "Silver Dune" }
-  - { running_order: 2,  country: "Angola",        artist: "Luar N’gola",      song: "Night Pulse" }
-  - { running_order: 3,  country: "Benin",         artist: "Ayo Soleil",       song: "Golden Echo" }
-  - { running_order: 4,  country: "Botswana",      artist: "Kalahari FM",      song: "Heat Mirage" }
-  - { running_order: 5,  country: "Cameroon",      artist: "Noir Atlas",       song: "River Neon" }
-  - { running_order: 6,  country: "Côte d’Ivoire", artist: "Velours Abidjan",  song: "Rouge Minuit" }
-  - { running_order: 7,  country: "DR Congo",      artist: "Kin Pulse",        song: "Electric Rain" }
-  - { running_order: 8,  country: "Egypt",         artist: "Nile Avenue",      song: "Glass Moon" }
-  - { running_order: 9,  country: "Ethiopia",      artist: "Addis Nova",       song: "Blue Flame" }
-  - { running_order: 10, country: "Gabon",         artist: "Libreville Lights",song: "Velvet Storm" }
-  - { running_order: 11, country: "Ghana",         artist: "Gold Coast Club",  song: "Higher Tide" }
-  - { running_order: 12, country: "Kenya",         artist: "Savanna Theory",   song: "Run to Dawn" }
-  - { running_order: 13, country: "Madagascar",    artist: "Baobab Hearts",    song: "Wild Orbit" }
-  - { running_order: 14, country: "Morocco",       artist: "Atlas After Dark", song: "Pink Horizon" }
-  - { running_order: 15, country: "Mozambique",    artist: "Maputo Metro",     song: "Ocean Static" }
-  - { running_order: 16, country: "Namibia",       artist: "Desert Signal",    song: "Silent Thunder" }
-  - { running_order: 17, country: "Nigeria",       artist: "Lagos Motion",     song: "Fireline" }
-  - { running_order: 18, country: "Rwanda",        artist: "Kigali Glow",      song: "City in Bloom" }
-  - { running_order: 19, country: "Senegal",       artist: "Dakar Nights",     song: "Magnetic Sand" }
-  - { running_order: 20, country: "South Africa",  artist: "Cape Velvet",      song: "Afterlight" }
-  - { running_order: 21, country: "Tanzania",      artist: "Zanzibar Wave",    song: "Moon Harbour" }
-  - { running_order: 22, country: "Tunisia",       artist: "Carthage Youth",   song: "Nova Medina" }
-  - { running_order: 23, country: "Uganda",        artist: "Equator Sound",    song: "Paper Skies" }
-  - { running_order: 24, country: "Zambia",        artist: "Lusaka Stereo",    song: "Bright Voltage" }
-  - { running_order: 25, country: "Ukraine",       artist: "Northern Heart",   song: "Ridne Svitlo", is_ukraine: true }
-```
+Development seed містить поточний official Grand Final running order, щоб після recreating локальної бази фіналісти відновлювались автоматично.
 
 ## Безпека, еластичність і план реалізації
 
@@ -106,4 +76,4 @@ finalists:
 
 Через event-like характер навантаження застосунок варто розгортати на **urlRenderturn20search1** з managed Postgres і масштабувати **перед** фіналом, а не чекати, поки autoscaling “додумається” вже під час піку. Практичний baseline для launch day: мінімум 2 web instances ще до відкриття голосування, autoscaling увімкнено, read-heavy сторінки глобальних рейтингів оновлюються polling-ом раз на 10–15 секунд і можуть кешуватися на короткий TTL. У документації Render прямо зазначено і manual scaling, і autoscaling, і балансування трафіку між інстансами, що достатньо для одноразового навантаженого івенту цього типу. citeturn20search1
 
-Порядок реалізації для агента має бути таким. Спочатку — **foundation**: layout, top menu, auth, roles, protected routes, contest state machine. Далі — **groups**: create/join/list/detail/owner actions. Потім — **voting**: render 25 карточок, режими `with_ukraine` / `without_ukraine`, drag-and-drop + tap fallback, completeness validation, immutable submit. Після цього — **leaderboards**: глобальні й групові рейтинги країн, public/private guards, polling refresh. Далі — **admin/results**: import finalists, open/close voting, official full ranking entry, user scoring, global/group user leaderboards. І лише в кінці — **hardening**: rate limits, CSP, audit log, empty states, mobile polish, load test, launch checklist. Це дає найкоротший шлях до робочого MVP без архітектурного overkill.
+Порядок реалізації для агента має бути таким. Спочатку — **foundation**: layout, top menu, auth, roles, protected routes, contest state machine. Далі — **groups**: create/join/list/detail/owner actions. Потім — **voting**: render finalist cards, режими `with_ukraine` / `without_ukraine`, drag-and-drop + tap fallback, draft save, completeness validation, immutable submit. Після цього — **leaderboards**: глобальні й групові рейтинги країн, public/private guards, polling refresh. Далі — **admin/results**: open/close voting, official full ranking entry, user scoring, global/group user leaderboards. І лише в кінці — **hardening**: rate limits, CSP, audit log, empty states, mobile polish, load test, launch checklist. Це дає найкоротший шлях до робочого MVP без архітектурного overkill.

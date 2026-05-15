@@ -5,13 +5,35 @@
 {% block content %}
   <section class="panel panel-wide">
     <p class="eyebrow">Група друзів</p>
-    <h1>{{ group.display_name }}</h1>
+    <div class="group-title-row">
+      <h1>{{ group.display_name }}</h1>
+      {% if is_owner %}
+        <button class="button-secondary button-compact" type="button" data-dialog-open="group-settings-dialog">Налаштування</button>
+      {% endif %}
+    </div>
     <div class="meta-row">
       <span class="state-pill{% if not group.includes_ukraine %} state-pill-gold{% endif %}">{{ group.mode_label }}</span>
       {% if is_owner %}<span class="state-pill">👑 власник</span>{% endif %}
       <a class="button-secondary button-compact" href="{% url 'leaderboards:group_countries' group.id %}">Рейтинг країн</a>
     </div>
   </section>
+
+  {% if is_owner %}
+    <dialog class="modal-dialog" id="group-settings-dialog">
+      <form class="modal-panel" method="post" action="{% url 'groups:update_settings' group.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h2 class="section-title">Налаштування групи</h2>
+          <button class="button-secondary button-compact" type="button" data-dialog-close>Закрити</button>
+        </div>
+        {% include "accounts/_form.html" with form=settings_form %}
+        {% if not can_edit_mode %}
+          <p class="help-text">Режим голосування зафіксовано після першого підтвердженого голосування в групі.</p>
+        {% endif %}
+        <button class="button-primary" type="submit">Зберегти налаштування</button>
+      </form>
+    </dialog>
+  {% endif %}
 
   <div class="detail-grid">
     <section class="panel">
@@ -23,8 +45,11 @@
               {% if membership.user_id == group.owner_id %}👑 {% endif %}{{ membership.user.username }}
             </span>
             <span class="vote-status{% if membership.has_voted %} vote-status-done{% endif %}">
-              {% if membership.has_voted %}Проголосував{% else %}Ще не голосував{% endif %}
+              {% if membership.has_voted %}Проголосував{% elif membership.has_draft %}Чернетка{% else %}Ще не голосував{% endif %}
             </span>
+            {% if membership.has_voted %}
+              <a class="button-secondary button-compact" href="{% url 'voting:group_member_ballot' group.id membership.user_id %}">Дивитись</a>
+            {% endif %}
             {% if is_owner and membership.user_id != group.owner_id %}
               <form method="post" action="{% url 'groups:remove_member' group.id membership.user_id %}">
                 {% csrf_token %}
@@ -59,19 +84,5 @@
         </form>
       {% endif %}
     </section>
-
-    {% if is_owner %}
-      <section class="panel">
-        <h2 class="section-title">Режим</h2>
-        {% if can_edit_mode %}
-          <form class="stacked-form" method="post" action="{% url 'groups:update_mode' group.id %}">
-            {% include "accounts/_form.html" with form=mode_form %}
-            <button class="button-primary" type="submit">Зберегти режим</button>
-          </form>
-        {% else %}
-          <p>Режим групи зафіксовано після виходу конкурсу зі стану setup.</p>
-        {% endif %}
-      </section>
-    {% endif %}
   </div>
 {% endblock %}

@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import ContestEdition, ContestEntry
+from .models import ContestEdition, ContestEntry, OfficialResult
 from .services import can_edit_finalists, can_publish_scores, can_vote, get_current_edition
 
 
@@ -62,20 +62,20 @@ class ContestEntryTests(TestCase):
         ContestEntry.objects.create(
             edition=edition,
             running_order=1,
-            country_name="Algeria",
-            country_code="DZ",
-            artist_name="Sahara Bloom",
-            song_title="Silver Dune",
+            country_name="Denmark",
+            country_code="DK",
+            artist_name="Soren Torpegaard Lund",
+            song_title="For Vi Gar Hjem",
         )
 
         with self.assertRaises(ValidationError):
             ContestEntry.objects.create(
                 edition=edition,
                 running_order=1,
-                country_name="Angola",
-                country_code="AO",
-                artist_name="Luar N'gola",
-                song_title="Night Pulse",
+                country_name="Germany",
+                country_code="DE",
+                artist_name="Sarah Engels",
+                song_title="Fire",
             )
 
     def test_only_one_ukraine_entry_per_edition(self):
@@ -108,22 +108,22 @@ class ContestEntryTests(TestCase):
             ContestEntry.objects.create(
                 edition=edition,
                 running_order=1,
-                country_name="Algeria",
-                country_code="DZ",
-                artist_name="Sahara Bloom",
-                song_title="Silver Dune",
+                country_name="Denmark",
+                country_code="DK",
+                artist_name="Soren Torpegaard Lund",
+                song_title="For Vi Gar Hjem",
             )
 
 
 class ContestSeedTests(TestCase):
-    def test_seed_creates_2026_edition_and_25_entries_idempotently(self):
+    def test_seed_creates_2026_edition_and_current_finalists_idempotently(self):
         call_command("seed_dev_contest")
         call_command("seed_dev_contest")
 
         edition = ContestEdition.objects.get(year=2026)
         self.assertEqual(edition.entries.count(), 25)
         self.assertEqual(edition.entries.filter(is_ukraine=True).count(), 1)
-        self.assertEqual(edition.entries.get(running_order=25).country_name, "Ukraine")
+        self.assertEqual(edition.entries.get(running_order=7).country_name, "Ukraine")
 
     def test_seed_is_blocked_after_setup(self):
         edition = ContestEdition.objects.create(year=2026, state=ContestEdition.STATE_VOTING_OPEN)
@@ -136,7 +136,7 @@ class ContestSeedTests(TestCase):
 
 
 class ContestViewsTests(TestCase):
-    def test_finalist_list_renders_seeded_entries(self):
+    def test_finalist_list_renders_current_entries(self):
         call_command("seed_dev_contest")
 
         response = self.client.get(reverse("contest:finalist_list"))
@@ -145,5 +145,48 @@ class ContestViewsTests(TestCase):
         self.assertContains(response, "Фіналісти")
         self.assertContains(response, "Ukraine")
         self.assertContains(response, "🇺🇦")
-        self.assertContains(response, "Ridne Svitlo")
+        self.assertContains(response, "Ridnym")
         self.assertNotContains(response, "<span>DZ</span>", html=True)
+
+    def test_finalist_list_uses_official_result_order_and_scores(self):
+        edition = ContestEdition.objects.create(year=2026)
+        winner = ContestEntry.objects.create(
+            edition=edition,
+            running_order=2,
+            country_name="Germany",
+            country_code="DE",
+            artist_name="Sarah Engels",
+            song_title="Fire",
+        )
+        runner_up = ContestEntry.objects.create(
+            edition=edition,
+            running_order=1,
+            country_name="Denmark",
+            country_code="DK",
+            artist_name="Soren Torpegaard Lund",
+            song_title="For Vi Gar Hjem",
+        )
+        OfficialResult.objects.create(
+            edition=edition,
+            final_rank=1,
+            contest_entry=winner,
+            jury_points=120,
+            televote_points=180,
+            total_points=300,
+        )
+        OfficialResult.objects.create(
+            edition=edition,
+            final_rank=2,
+            contest_entry=runner_up,
+            jury_points=100,
+            televote_points=150,
+            total_points=250,
+        )
+
+        response = self.client.get(reverse("contest:finalist_list"))
+        html = response.content.decode()
+
+        self.assertLess(html.find("Germany"), html.find("Denmark"))
+        self.assertContains(response, "Журі")
+        self.assertContains(response, "Глядачі")
+        self.assertContains(response, "300")

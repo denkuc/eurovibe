@@ -16,8 +16,13 @@
 
   {% if not edition or not edition.can_vote %}
     <section class="empty-state">
-      <h2>Голосування ще не відкрите</h2>
-      <p>Коли суперадмін відкриє голосування, тут зʼявиться бюлетень для доступних тобі режимів.</p>
+      {% if edition and edition.state != "setup" %}
+        <h2>Голосування закрите</h2>
+        <p>Бюлетені більше не приймаються. Після внесення офіційних результатів тут залишаться доступними вже підтверджені голосування.</p>
+      {% else %}
+        <h2>Голосування ще не відкрите</h2>
+        <p>Коли суперадмін відкриє голосування, тут зʼявиться бюлетень для доступних тобі режимів.</p>
+      {% endif %}
     </section>
   {% elif not modes %}
     <section class="empty-state">
@@ -57,11 +62,23 @@
         {% endfor %}
       </section>
     {% else %}
+      {% if draft_ballot %}
+        <section class="panel panel-wide voting-header">
+          <p class="eyebrow">Draft</p>
+          <h1>Чернетку збережено</h1>
+          <p>Можна змінювати вибір і зберігати знову. Після підтвердження бюлетень стане незмінним.</p>
+        </section>
+      {% endif %}
       <form class="voting-form" method="post" data-voting-form data-mode="{{ selected_mode }}">
         {% csrf_token %}
         <input type="hidden" name="mode" value="{{ selected_mode }}">
         {% for points in allowed_points %}
-          <input type="hidden" name="points_{{ points }}" data-point-input="{{ points }}">
+          <input
+            type="hidden"
+            name="points_{{ points }}"
+            data-point-input="{{ points }}"
+            {% for item in ballot_items %}{% if item.points == points %}value="{{ item.contest_entry_id }}"{% endif %}{% endfor %}
+          >
         {% endfor %}
 
         <div class="voting-layout">
@@ -102,9 +119,14 @@
                 <p class="help-text" id="ukraine-rule">У режимі без України її картка видима, але не приймає бали.</p>
               {% endif %}
               <div class="vote-progress" data-vote-progress>0 / 10</div>
-              <button class="button-primary vote-submit" type="submit" disabled data-submit-button>
-                Підтвердити голосування
-              </button>
+              <div class="action-row vote-actions">
+                <button class="button-secondary" type="submit" name="action" value="save_draft" data-draft-button>
+                  Зберегти чернетку
+                </button>
+                <button class="button-primary vote-submit" type="submit" name="action" value="submit" disabled data-submit-button>
+                  Підтвердити голосування
+                </button>
+              </div>
             </div>
           </aside>
         </div>

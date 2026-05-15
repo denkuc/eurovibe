@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load contest_extras %}
+
+{% block title %}Бюлетень {{ ballot.user.username }} · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="panel panel-wide">
+    <p class="eyebrow">Голосування учасника</p>
+    <h1>{{ ballot.user.username }}</h1>
+    <div class="meta-row">
+      <a class="button-secondary button-compact" href="{% url 'groups:detail' group.id %}">Назад до групи</a>
+      <span class="state-pill">{{ group.display_name }}</span>
+      <span class="state-pill">{{ group.mode_label }}</span>
+      <span class="state-pill">Підтверджено {{ ballot.submitted_at|date:"d.m.Y H:i" }}</span>
+    </div>
+  </section>
+
+  <section class="readonly-ballot" aria-label="Бюлетень учасника">
+    {% for item in ballot_items %}
+      <article class="readonly-ballot-row">
+        <div class="point-badge">{{ item.points }}</div>
+        <div class="readonly-entry-copy">
+          <h2><span class="country-flag" aria-hidden="true">{{ item.contest_entry.country_code|country_flag }}</span> {{ item.contest_entry.country_name }}</h2>
+          <p>{{ item.contest_entry.artist_name }} · {{ item.contest_entry.song_title }}</p>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

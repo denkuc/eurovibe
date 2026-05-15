@@ -39,6 +39,25 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+document.addEventListener("click", (event) => {
+  const openButton = event.target.closest("[data-dialog-open]");
+  if (openButton) {
+    const dialog = document.getElementById(openButton.dataset.dialogOpen);
+    if (dialog && typeof dialog.showModal === "function") {
+      dialog.showModal();
+    }
+    return;
+  }
+
+  const closeButton = event.target.closest("[data-dialog-close]");
+  if (closeButton) {
+    const dialog = closeButton.closest("dialog");
+    if (dialog) {
+      dialog.close();
+    }
+  }
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Enter" || event.isComposing || event.defaultPrevented) {
     return;
@@ -81,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const board = form.querySelector(".entry-board");
   const mode = form.dataset.mode;
-  const allowedPoints = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
   let selectedPoint = null;
   let draggedPoint = null;
 
@@ -268,6 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   form.addEventListener("submit", (event) => {
+    const submitter = event.submitter;
+    if (submitter && submitter.dataset.draftButton !== undefined) {
+      return;
+    }
     if (submitButton.disabled) {
       event.preventDefault();
       return;
@@ -278,11 +300,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  allowedPoints.forEach((points) => {
-    const input = pointInputs.get(points);
-    if (input && input.value) {
-      input.value = "";
-    }
-  });
   render();
 });
