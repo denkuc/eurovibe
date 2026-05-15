@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Зворотний звʼязок · ЄвроВайб{% endblock %}
+
+{% block content %}
+  <section class="auth-card">
+    <p class="eyebrow">Feedback</p>
+    <h1>Зворотний звʼязок</h1>
+    <p class="help-text">Напиши, що зламалось, чого не вистачає або що варто покращити.</p>
+    <form method="post">
+      {% include "accounts/_form.html" %}
+      <button class="button-primary" type="submit">Надіслати</button>
+    </form>
+  </section>
+{% endblock %}

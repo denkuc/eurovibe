@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from .models import FeedbackMessage
 from .roles import is_superadmin
 
 
@@ -88,6 +89,35 @@ class AccountsTests(TestCase):
 
         self.assertContains(login_response, f"{reverse('accounts:register')}?next=/groups/invite/abc/")
         self.assertContains(register_response, f"{reverse('accounts:login')}?next=/groups/invite/abc/")
+
+    def test_feedback_form_is_public_and_saves_message(self):
+        response = self.client.post(
+            reverse("accounts:feedback"),
+            {
+                "name": "Оля",
+                "message": "Додайте темну магію scoreboard.",
+            },
+        )
+
+        self.assertRedirects(response, reverse("accounts:feedback"))
+        message = FeedbackMessage.objects.get()
+        self.assertIsNone(message.user)
+        self.assertEqual(message.name, "Оля")
+        self.assertEqual(message.message, "Додайте темну магію scoreboard.")
+
+    def test_feedback_form_attaches_authenticated_user(self):
+        user = get_user_model().objects.create_user(username="maks", password="very-long-passphrase")
+        self.client.force_login(user)
+
+        self.client.post(
+            reverse("accounts:feedback"),
+            {
+                "name": "Макс",
+                "message": "Все працює.",
+            },
+        )
+
+        self.assertEqual(FeedbackMessage.objects.get().user, user)
 
     def test_is_superadmin_helper(self):
         user = get_user_model().objects.create_user(username="regular")

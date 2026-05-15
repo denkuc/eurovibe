@@ -166,6 +166,21 @@
     font-weight: 800;
   }
 
+  .footer-feedback-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.1rem;
+    color: var(--color-muted);
+    font-weight: 800;
+  }
+
+  .footer-feedback-link:hover,
+  .footer-feedback-link:focus-visible {
+    color: var(--color-text);
+    outline: none;
+  }
+
   .footer-donate-link {
     display: inline-flex;
     align-items: center;
@@ -558,12 +573,28 @@
     border-bottom: 1px solid var(--color-border);
   }
 
+  .member-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .member-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .member-actions form {
+    margin: 0;
+  }
+
   .member-row:last-child {
     border-bottom: 0;
   }
 
   .vote-status {
-    margin-left: auto;
     padding: 0.22rem 0.55rem;
     border: 1px solid rgba(255, 216, 107, 0.34);
     border-radius: 999px;
@@ -1222,6 +1253,44 @@
     margin-bottom: 1rem;
   }
 
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-stat-card {
+    display: grid;
+    gap: 0.25rem;
+    min-height: 8.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .admin-stat-card span {
+    color: var(--color-cyan);
+    font-size: 0.76rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .admin-stat-card strong {
+    color: var(--color-text);
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .admin-stat-card p {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
   .admin-panel h2,
   .admin-list-panel h2 {
     margin: 0.4rem 0 0.7rem;
@@ -1260,6 +1329,44 @@
     min-width: 0;
     color: var(--color-muted);
     overflow-wrap: anywhere;
+  }
+
+  .feedback-list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .feedback-row {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .feedback-row:last-child {
+    border-bottom: 0;
+  }
+
+  .feedback-row header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--color-text);
+  }
+
+  .feedback-row header span {
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    color: var(--color-muted);
   }
 
   .readonly-ballot {
@@ -1348,8 +1455,41 @@
 
     .group-grid,
     .detail-grid,
-    .admin-grid {
+    .admin-grid,
+    .admin-stats-grid {
       grid-template-columns: 1fr;
+    }
+
+    .member-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.65rem;
+      align-items: start;
+    }
+
+    .member-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-content: stretch;
+      gap: 0.55rem;
+      width: 100%;
+    }
+
+    .member-actions .vote-status,
+    .member-actions .button-secondary,
+    .member-actions .button-danger,
+    .member-actions form {
+      width: 100%;
+    }
+
+    .member-actions .vote-status,
+    .member-actions .button-secondary,
+    .member-actions .button-danger {
+      justify-content: center;
+      min-height: 2.35rem;
+      padding-right: 0.45rem;
+      padding-left: 0.45rem;
+      text-align: center;
     }
 
     .leaderboard-row {

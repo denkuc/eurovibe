@@ -1,11 +1,15 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 
+from accounts.models import FeedbackMessage
 from accounts.roles import is_superadmin
 from contest.models import ContestEdition
+from groups.models import FriendGroup, GroupMembership
 from contest.services import (
     get_current_edition,
     parse_official_results_csv,
@@ -96,15 +100,33 @@ def dashboard(request):
             return redirect("admin_panel:dashboard")
 
     edition = get_current_edition()
+    submitted_ballots = Ballot.objects.filter(immutable=True, submitted_at__isnull=False)
+    if edition:
+        edition_submitted_ballots = submitted_ballots.filter(edition=edition)
+    else:
+        edition_submitted_ballots = submitted_ballots.none()
+    feedback_page = Paginator(FeedbackMessage.objects.select_related("user"), 8).get_page(
+        request.GET.get("feedback_page")
+    )
+
     context = {
         "audit_logs": AdminAuditLog.objects.select_related("actor")[:12],
-        "ballot_count": Ballot.objects.filter(edition=edition, immutable=True, submitted_at__isnull=False).count() if edition else 0,
+        "ballot_count": edition_submitted_ballots.count(),
         "edition": edition,
         "edition_form": EditionForm(),
         "entries": edition.entries.order_by("running_order") if edition else [],
+        "feedback_page": feedback_page,
         "official_form": OfficialResultsForm(edition=edition),
         "official_preview": official_preview,
         "score_count": UserScore.objects.filter(edition=edition).count() if edition else 0,
+        "stats": {
+            "registered_users": get_user_model().objects.count(),
+            "submitted_voters": submitted_ballots.values("user_id").distinct().count(),
+            "edition_submitted_voters": edition_submitted_ballots.values("user_id").distinct().count(),
+            "groups": FriendGroup.objects.count(),
+            "memberships": GroupMembership.objects.count(),
+            "feedback_messages": feedback_page.paginator.count,
+        },
     }
     return render(request, "admin_panel/dashboard.html", context)
 

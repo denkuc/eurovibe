@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from accounts.models import FeedbackMessage
 from contest.models import ContestEdition, ContestEntry, OfficialResult
 from groups.services import create_group
 from voting.models import Ballot, UserScore
@@ -29,6 +30,25 @@ class AdminPanelTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Backoffice")
         self.assertNotContains(response, "admin-entry-list")
+
+    def test_dashboard_shows_core_stats_and_paginated_feedback(self):
+        self.client.force_login(self.admin)
+        create_group(owner=self.user, name="Friends", includes_ukraine=True)
+        for index in range(10):
+            FeedbackMessage.objects.create(name=f"User {index}", message=f"Message {index}")
+
+        response = self.client.get(reverse("admin_panel:dashboard"))
+
+        self.assertContains(response, "Зареєстровано")
+        self.assertContains(response, "Групи")
+        self.assertContains(response, "Сторінка 1 з 2")
+        self.assertContains(response, "Message 9")
+        self.assertNotContains(response, "Message 0")
+
+        response = self.client.get(f"{reverse('admin_panel:dashboard')}?feedback_page=2")
+
+        self.assertContains(response, "Сторінка 2 з 2")
+        self.assertContains(response, "Message 0")
 
     def test_open_voting_write_audit_log(self):
         self.client.force_login(self.admin)

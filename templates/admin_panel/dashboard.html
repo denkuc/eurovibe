@@ -14,6 +14,29 @@
     {% endif %}
   </section>
 
+  <section class="admin-stats-grid">
+    <div class="admin-stat-card">
+      <span>Зареєстровано</span>
+      <strong>{{ stats.registered_users }}</strong>
+      <p>користувачів</p>
+    </div>
+    <div class="admin-stat-card">
+      <span>Проголосувало</span>
+      <strong>{{ stats.submitted_voters }}</strong>
+      <p>унікальних користувачів{% if edition %}, edition {{ edition.year }}: {{ stats.edition_submitted_voters }}{% endif %}</p>
+    </div>
+    <div class="admin-stat-card">
+      <span>Групи</span>
+      <strong>{{ stats.groups }}</strong>
+      <p>учасників у групах: {{ stats.memberships }}</p>
+    </div>
+    <div class="admin-stat-card">
+      <span>Feedback</span>
+      <strong>{{ stats.feedback_messages }}</strong>
+      <p>повідомлень від користувачів</p>
+    </div>
+  </section>
+
   <div class="admin-grid">
     <section class="panel admin-panel">
       <p class="eyebrow">Edition</p>
@@ -41,6 +64,43 @@
       </div>
     </section>
   </div>
+
+  <section class="panel panel-wide admin-list-panel">
+    <p class="eyebrow">Feedback</p>
+    <h2>Повідомлення</h2>
+    <div class="feedback-list">
+      {% for item in feedback_page %}
+        <article class="feedback-row">
+          <header>
+            <strong>
+              {% if item.user %}
+                {{ item.user.username }}
+              {% elif item.name %}
+                {{ item.name }}
+              {% else %}
+                Анонімно
+              {% endif %}
+            </strong>
+            <span>{{ item.created_at|date:"d.m.Y H:i" }}</span>
+          </header>
+          <p>{{ item.message|linebreaksbr }}</p>
+        </article>
+      {% empty %}
+        <p class="help-text">Повідомлень поки немає.</p>
+      {% endfor %}
+    </div>
+    {% if feedback_page.paginator.num_pages > 1 %}
+      <nav class="pagination" aria-label="Feedback pagination">
+        {% if feedback_page.has_previous %}
+          <a class="button-secondary button-compact" href="?feedback_page={{ feedback_page.previous_page_number }}">Назад</a>
+        {% endif %}
+        <span>Сторінка {{ feedback_page.number }} з {{ feedback_page.paginator.num_pages }}</span>
+        {% if feedback_page.has_next %}
+          <a class="button-secondary button-compact" href="?feedback_page={{ feedback_page.next_page_number }}">Далі</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </section>
 
   <section class="panel panel-wide admin-list-panel">
     <p class="eyebrow">Official results</p>

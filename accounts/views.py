@@ -1,5 +1,6 @@
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -8,7 +9,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from groups.models import FriendGroup
 from groups.services import join_group
 
-from .forms import LoginForm, RegisterForm
+from .forms import FeedbackForm, LoginForm, RegisterForm
 from .roles import is_superadmin
 
 
@@ -79,6 +80,25 @@ def login_view(request):
             "next": request.POST.get("next") or request.GET.get("next", ""),
         },
     )
+
+
+def feedback(request):
+    if request.method == "POST":
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback_message = form.save(commit=False)
+            if request.user.is_authenticated:
+                feedback_message.user = request.user
+            feedback_message.save()
+            messages.success(request, "Дякую, повідомлення збережено.")
+            return redirect("accounts:feedback")
+    else:
+        initial = {}
+        if request.user.is_authenticated:
+            initial["name"] = request.user.get_username()
+        form = FeedbackForm(initial=initial)
+
+    return render(request, "accounts/feedback.html", {"form": form})
 
 
 @login_required

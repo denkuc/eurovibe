@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
+from .models import FeedbackMessage
+
 
 PASSWORD_HELP_TEXT = (
     "Мінімум 15 символів. Використай унікальний пароль і збережи його. "
@@ -44,3 +46,19 @@ class LoginForm(AuthenticationForm):
         help_text="Password reset у цій версії недоступний.",
     )
 
+
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = FeedbackMessage
+        fields = ("name", "message")
+        labels = {
+            "name": "Імʼя",
+            "message": "Повідомлення",
+        }
+        help_texts = {
+            "name": "Можна залишити порожнім.",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"autocomplete": "name"}),
+            "message": forms.Textarea(attrs={"rows": 7}),
+        }
