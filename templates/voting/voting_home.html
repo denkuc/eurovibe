@@ -91,7 +91,7 @@
                 data-running-order="{{ entry.running_order }}"
                 data-is-ukraine="{% if entry.is_ukraine %}true{% else %}false{% endif %}"
               >
-                <button class="vote-entry-button" type="button" data-entry-button {% if selected_mode == "without_ukraine" and entry.is_ukraine %}aria-describedby="ukraine-rule"{% endif %}>
+                <button class="vote-entry-button" type="button" data-entry-button>
                   <span class="running-order">{{ entry.running_order }}</span>
                   <span class="vote-entry-copy">
                     <strong><span class="country-flag" aria-hidden="true">{{ entry.country_code|country_flag }}</span> {{ entry.country_name }}</strong>
@@ -107,24 +107,21 @@
             {% endfor %}
           </section>
 
-          <aside class="points-tray" aria-label="Бали">
+          <aside class="points-tray" aria-label="Бали" data-points-panel>
             <div class="points-tray-inner">
-              <p class="eyebrow">Points</p>
+              <p class="eyebrow points-eyebrow">Points</p>
               <div class="points-grid" data-points-tray>
                 {% for points in allowed_points %}
                   <button class="point-chip" type="button" data-point-chip="{{ points }}">{{ points }}</button>
                 {% endfor %}
               </div>
-              {% if selected_mode == "without_ukraine" %}
-                <p class="help-text" id="ukraine-rule">У режимі без України її картка видима, але не приймає бали.</p>
-              {% endif %}
-              <div class="vote-progress" data-vote-progress>0 / 10</div>
+              <div class="vote-progress points-progress" data-vote-progress>0 / 10</div>
               <div class="action-row vote-actions">
                 <button class="button-secondary" type="submit" name="action" value="save_draft" data-draft-button>
-                  Зберегти чернетку
+                  💾 Зберегти
                 </button>
                 <button class="button-primary vote-submit" type="submit" name="action" value="submit" disabled data-submit-button>
-                  Підтвердити голосування
+                  🚀 Відправити
                 </button>
               </div>
             </div>

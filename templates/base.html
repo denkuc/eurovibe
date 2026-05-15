@@ -16,12 +16,16 @@
           <span>ЄвроВайб</span>
         </a>
         <nav class="topnav" aria-label="Головна навігація">
+          {% if request.user.is_authenticated and current_user_can_vote %}
+            <a class="{% if request.resolver_match.namespace == 'voting' %}active{% endif %}" href="{% url 'voting:index' %}" {% if request.resolver_match.namespace == 'voting' %}aria-current="page"{% endif %}>Голосування</a>
+          {% endif %}
           <a class="{% if request.resolver_match.namespace == 'contest' %}active{% endif %}" href="{% url 'contest:finalist_list' %}" {% if request.resolver_match.namespace == 'contest' %}aria-current="page"{% endif %}>Фіналісти</a>
           <a class="{% if request.resolver_match.namespace == 'leaderboards' %}active{% endif %}" href="{% url 'leaderboards:global_countries' %}" {% if request.resolver_match.namespace == 'leaderboards' %}aria-current="page"{% endif %}>Рейтинги</a>
           {% if request.user.is_authenticated %}
             <a class="{% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name != 'join_by_code' %}active{% endif %}" href="{% url 'groups:list' %}" {% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name != 'join_by_code' %}aria-current="page"{% endif %}>Мої групи</a>
-            <a class="{% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name == 'join_by_code' %}active{% endif %}" href="{% url 'groups:join_by_code' %}" {% if request.resolver_match.namespace == 'groups' and request.resolver_match.url_name == 'join_by_code' %}aria-current="page"{% endif %}>Приєднатися</a>
-            <a class="{% if request.resolver_match.namespace == 'voting' %}active{% endif %}" href="{% url 'voting:index' %}" {% if request.resolver_match.namespace == 'voting' %}aria-current="page"{% endif %}>Голосування</a>
+            {% if not current_user_can_vote %}
+              <a class="{% if request.resolver_match.namespace == 'voting' %}active{% endif %}" href="{% url 'voting:index' %}" {% if request.resolver_match.namespace == 'voting' %}aria-current="page"{% endif %}>Голосування</a>
+            {% endif %}
             {% if current_user_is_superadmin %}
               <a class="{% if request.resolver_match.namespace == 'admin_panel' %}active{% endif %}" href="{% url 'admin_panel:dashboard' %}" {% if request.resolver_match.namespace == 'admin_panel' %}aria-current="page"{% endif %}>Superadmin</a>
             {% endif %}
@@ -49,6 +53,9 @@
       </main>
 
       <footer class="site-footer">
+        <a class="footer-donate-link" href="https://send.monobank.ua/jar/2senqEML1v" rel="noopener noreferrer" target="_blank">
+          Збір на пікап 🫙💸 🛻
+        </a>
         <a class="footer-author-link" href="https://www.threads.com/@denkuc" rel="me noopener noreferrer" target="_blank">
           <span>Створено</span>
           <span class="threads-logo-badge">

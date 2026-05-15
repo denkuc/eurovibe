@@ -147,6 +147,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
     width: min(100% - 2rem, var(--page-max));
     margin: 0 auto;
     padding: 0 0 2rem;
@@ -162,6 +164,26 @@
     gap: 0.4rem;
     color: var(--color-cyan);
     font-weight: 800;
+  }
+
+  .footer-donate-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.1rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid rgba(255, 216, 107, 0.42);
+    border-radius: 999px;
+    color: var(--color-gold);
+    font-weight: 900;
+    background: rgba(255, 216, 107, 0.08);
+  }
+
+  .footer-donate-link:hover,
+  .footer-donate-link:focus-visible {
+    color: #160f04;
+    background: var(--color-gold);
+    outline: none;
   }
 
   .footer-author-link:hover,
@@ -603,6 +625,8 @@
   .finalist-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(13, auto);
+    grid-auto-flow: column;
     gap: 0.45rem;
     width: 100%;
   }
@@ -894,6 +918,10 @@
     border-radius: var(--radius-card);
     background: rgba(9, 5, 31, 0.84);
     box-shadow: var(--shadow-soft);
+  }
+
+  .points-tray-toggle {
+    display: none;
   }
 
   .points-grid {
@@ -1282,11 +1310,36 @@
     .topbar {
       align-items: flex-start;
       flex-direction: column;
+      gap: 0.65rem;
+      padding: 0.65rem 1rem;
     }
 
     .topnav {
       justify-content: flex-start;
       width: 100%;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-right: -1rem;
+      padding-right: 2.5rem;
+      padding-bottom: 0.15rem;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 2.25rem), transparent 100%);
+      mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 2.25rem), transparent 100%);
+    }
+
+    .topnav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .topnav a,
+    .nav-button,
+    .nav-user {
+      flex: 0 0 auto;
+      min-height: 2rem;
+      padding: 0.38rem 0.65rem;
+      scroll-snap-align: start;
     }
 
     .foundation-grid {
@@ -1310,6 +1363,8 @@
 
     .finalist-list {
       grid-template-columns: 1fr;
+      grid-template-rows: none;
+      grid-auto-flow: row;
     }
 
     .finalist-row .state-pill {
@@ -1318,11 +1373,14 @@
     }
 
     .voting-layout {
-      grid-template-columns: 1fr;
-      padding-bottom: 15rem;
+      grid-template-columns: minmax(0, 1fr) 3.15rem;
+      gap: 0.5rem;
+      align-items: start;
+      padding-bottom: 5.6rem;
     }
 
     .entry-board {
+      grid-column: 1;
       column-count: 1;
     }
 
@@ -1333,28 +1391,62 @@
     }
 
     .points-tray {
+      position: sticky;
+      top: 4.6rem;
+      z-index: 5;
+      grid-column: 2;
+      padding: 0;
+      background: transparent;
+    }
+
+    .points-tray-inner {
+      gap: 0.45rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .points-tray-toggle {
+      display: none;
+    }
+
+    .points-eyebrow,
+    .points-progress {
+      display: none;
+    }
+
+    .points-grid {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.35rem;
+    }
+
+    .point-chip {
+      width: 3.15rem;
+      min-height: 2.65rem;
+      font-size: 1rem;
+    }
+
+    .vote-actions {
       position: fixed;
       z-index: 20;
       right: 0;
       bottom: 0;
       left: 0;
-      top: auto;
-      padding: 0.75rem;
-      background: linear-gradient(180deg, transparent, rgba(9, 5, 31, 0.94) 24%);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+      margin-top: 0;
+      padding: 0.65rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, transparent, rgba(9, 5, 31, 0.96) 28%);
     }
 
-    .points-tray-inner {
-      width: min(100%, var(--page-max));
-      margin: 0 auto;
-      padding: 0.75rem;
-    }
-
-    .points-grid {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
-
-    .point-chip {
-      min-height: 2.55rem;
+    .vote-actions .button-primary,
+    .vote-actions .button-secondary {
+      min-height: 2.75rem;
+      padding: 0.55rem 0.45rem;
+      white-space: nowrap;
     }
 
     .noscript-grid {

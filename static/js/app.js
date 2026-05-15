@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const cards = [...form.querySelectorAll("[data-entry-card]")];
   const submitButton = form.querySelector("[data-submit-button]");
-  const progress = form.querySelector("[data-vote-progress]");
+  const progressItems = [...form.querySelectorAll("[data-vote-progress]")];
 
   function assignments() {
     const assigned = new Map();
@@ -222,7 +222,9 @@ document.addEventListener("DOMContentLoaded", () => {
     sorted.forEach((card) => board.append(card));
 
     const count = assignedEntryIds.size;
-    progress.textContent = `${count} / 10`;
+    progressItems.forEach((progress) => {
+      progress.textContent = `${count} / 10`;
+    });
     submitButton.disabled = count !== 10;
   }
 

@@ -1,32 +1,41 @@
 {% extends "base.html" %}
 
-{% block title %}ЄвроВайб · Foundation{% endblock %}
+{% block title %}ЄвроВайб · Домашнє голосування{% endblock %}
 
 {% block content %}
   <section class="hero">
-    <p class="eyebrow">Vienna 2026 · friend scoreboard</p>
+    <p class="eyebrow">Eurovision 2026 · домашнє голосування</p>
     <h1>ЄвроВайб</h1>
     <p class="lede">
-      SSR-фундамент застосунку готовий до наступних етапів: акаунти, групи,
-      голосування і рейтинги.
+      Збирай друзів у групи, виставляй свої 12 балів фіналістам і дивись,
+      чиї смаки найближчі до офіційного результату.
     </p>
+    <div class="action-row">
+      {% if request.user.is_authenticated %}
+        <a class="button-primary" href="{% url 'voting:index' %}">Перейти до голосування</a>
+        <a class="button-secondary" href="{% url 'groups:list' %}">Мої групи</a>
+      {% else %}
+        <a class="button-primary" href="{% url 'accounts:register' %}">Створити акаунт</a>
+        <a class="button-secondary" href="{% url 'accounts:login' %}">Увійти</a>
+      {% endif %}
+    </div>
   </section>
 
-  <section class="foundation-grid" aria-label="Foundation status">
+  <section class="foundation-grid" aria-label="Що можна робити в ЄвроВайбі">
     <article class="status-card">
-      <span class="status-kicker">Layout</span>
-      <h2>Responsive shell</h2>
-      <p>Базовий темний layout із top nav placeholder та контейнером сторінки.</p>
+      <span class="status-kicker">Групи</span>
+      <h2>Голосуйте разом</h2>
+      <p>Створи групу або приєднайся за кодом, щоб порівняти бали з друзями.</p>
     </article>
     <article class="status-card">
-      <span class="status-kicker">Static</span>
-      <h2>Design tokens</h2>
-      <p>CSS-токени винесені в static-файли для подальшого розвитку дизайн-системи.</p>
+      <span class="status-kicker">Бали</span>
+      <h2>Свій топ фіналістів</h2>
+      <p>Роздай 1-8, 10 і 12 балів країнам у режимі з Україною або без неї.</p>
     </article>
     <article class="status-card">
-      <span class="status-kicker">Ops</span>
-      <h2>Render-ready</h2>
-      <p>Є health check, env-based settings, static collection і deploy skeleton.</p>
+      <span class="status-kicker">Рейтинги</span>
+      <h2>Хто вгадав вайб</h2>
+      <p>Після фіналу дивись рейтинги країн, груп і користувачів.</p>
     </article>
   </section>
 {% endblock %}
