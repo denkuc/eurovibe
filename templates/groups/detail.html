@@ -37,6 +37,30 @@
 
   <div class="detail-grid">
     <section class="panel">
+      <h2 class="section-title">Запрошення</h2>
+      <div class="invite-stack">
+        <div>
+          <p class="label-text">Код</p>
+          <p class="join-code">{{ group.join_code }}</p>
+        </div>
+        <div>
+          <p class="label-text">Лінк</p>
+          <div class="copy-row">
+            <input class="copy-input" type="text" value="{{ invite_url }}" readonly data-copy-source>
+            <button class="button-secondary" type="button" data-copy-button>Copy</button>
+          </div>
+        </div>
+      </div>
+
+      {% if is_owner %}
+        <form class="stacked-form" method="post" action="{% url 'groups:rotate_invite' group.id %}">
+          {% csrf_token %}
+          <button class="button-secondary" type="submit">Оновити код і лінк</button>
+        </form>
+      {% endif %}
+    </section>
+
+    <section class="panel">
       <h2 class="section-title">Учасники</h2>
       <ul class="member-list">
         {% for membership in memberships %}
@@ -61,30 +85,6 @@
           </li>
         {% endfor %}
       </ul>
-    </section>
-
-    <section class="panel">
-      <h2 class="section-title">Запрошення</h2>
-      <div class="invite-stack">
-        <div>
-          <p class="label-text">Код</p>
-          <p class="join-code">{{ group.join_code }}</p>
-        </div>
-        <div>
-          <p class="label-text">Лінк</p>
-          <div class="copy-row">
-            <input class="copy-input" type="text" value="{{ invite_url }}" readonly data-copy-source>
-            <button class="button-secondary" type="button" data-copy-button>Copy</button>
-          </div>
-        </div>
-      </div>
-
-      {% if is_owner %}
-        <form class="stacked-form" method="post" action="{% url 'groups:rotate_invite' group.id %}">
-          {% csrf_token %}
-          <button class="button-secondary" type="submit">Оновити код і лінк</button>
-        </form>
-      {% endif %}
     </section>
   </div>
 {% endblock %}
